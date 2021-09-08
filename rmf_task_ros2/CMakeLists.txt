@@ -92,9 +92,7 @@ add_executable(rmf_task_dispatcher
 target_link_libraries(rmf_task_dispatcher PUBLIC rmf_task_ros2)
 
 if(DEFINED ENV{CLOBER_RMF}) # clober
-  if($ENV{CLOBER_RMF} EQUAL 1)
-    add_compile_definitions(CLOBER_RMF)
-  endif()
+  add_compile_definitions(CLOBER_RMF)
 endif()
 
 #===============================================================================

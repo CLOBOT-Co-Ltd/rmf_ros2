@@ -1,0 +1,61 @@
+repositories:
+  rmf/rmf_battery:
+    type: git
+    url: https://github.com/open-rmf/rmf_battery.git
+    version: main
+  rmf/rmf_internal_msgs:
+    type: git
+    url: https://github.com/CLOBOT-Co-Ltd/rmf_internal_msgs.git
+    version: clober-dev
+  rmf/rmf_ros2:
+    type: git
+    url: https://github.com/CLOBOT-Co-Ltd/rmf_ros2.git
+    version: clober-dev
+  rmf/rmf_task:
+    type: git
+    url: https://github.com/CLOBOT-Co-Ltd/rmf_task.git
+    version: clober-dev
+  rmf/rmf_traffic:
+    type: git
+    url: https://github.com/CLOBOT-Co-Ltd/rmf_traffic.git
+    version: clober-dev
+  rmf/rmf_utils:
+    type: git
+    url: https://github.com/open-rmf/rmf_utils.git
+    version: main
+  rmf/rmf_cmake_uncrustify:
+    type: git
+    url: https://github.com/open-rmf/rmf_cmake_uncrustify.git
+    version: main
+  rmf/ament_cmake_catch2:
+    type: git
+    url: https://github.com/open-rmf/ament_cmake_catch2.git
+    version: main
+  rmf/rmf_visualization:
+    type: git
+    url: https://github.com/open-rmf/rmf_visualization.git
+    version: main
+  rmf/rmf_visualization_msgs:
+    type: git
+    url: https://github.com/open-rmf/rmf_visualization_msgs.git
+    version: main
+  rmf/rmf_building_map_msgs:
+    type: git
+    url: https://github.com/open-rmf/rmf_building_map_msgs.git
+    version: main
+  rmf/rmf_simulation:
+    type: git
+    url: https://github.com/open-rmf/rmf_simulation.git
+    version: main
+  rmf/rmf_traffic_editor:
+    type: git
+    url: https://github.com/open-rmf/rmf_traffic_editor.git
+    version: main
+  demonstrations/rmf_demos:
+    type: git
+    url: https://github.com/open-rmf/rmf_demos.git
+    version: main
+  thirdparty/menge_vendor:
+    type: git
+    url: https://github.com/open-rmf/menge_vendor.git
+    version: master

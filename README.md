@@ -20,7 +20,14 @@ If you want to run the CLOBER RMF, execute this command.
 export CLOBER_RMF=1
 
 cd ~/clober_rmf_ws/
+source /opt/ros/foxy/setup.bash
 colcon build
 ```
 
+# Build for ORIGINAL VERSION
 If you want to run the Original RMF, don't declare the `CLOBER_RMF`.
+```bash
+cd ~/clober_rmf_ws/
+source /opt/ros/foxy/setup.bash
+colcon build
+```

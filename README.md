@@ -5,7 +5,7 @@ clone the CLOBER RMF packages
 mkdir -p ~/clober_rmf_ws/src
 cd ~/clober_rmf_ws
 wget https://raw.githubusercontent.com/CLOBOT-Co-Ltd/rmf_ros2/clober-dev/clober_rmf.repos
-vcs import src < rmf.repos
+vcs import src < clober_rmf.repos
 
 cd ~/clober_rmf_ws/src
 git clone https://github.com/CLOBOT-Co-Ltd/clober_rmf.git -b dev

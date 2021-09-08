@@ -43,6 +43,10 @@
 #include <unordered_set>
 #include <stdexcept>
 
+#ifdef CLOBER_RMF
+#include <rmf_traffic_msgs/msg/negotiation_notice.hpp>
+#endif
+
 namespace rmf_fleet_adapter {
 namespace agv {
 
@@ -77,6 +81,36 @@ public:
 
     negotiator->respond(table_viewer, responder);
   }
+
+  #ifdef CLOBER_RMF
+  void clober_respond(
+    const TableViewerPtr& table_viewer,
+    const ResponderPtr& responder,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path)
+    { 
+        std::cout <<"LiaisonNegotiator::clober_respond id : " <<std::endl;
+        const auto negotiator = w_negotiator.lock();
+        if (!negotiator)
+        {
+          // If we no longer have access to the upstream negotiator, then we simply
+          // forfeit.
+          //
+          // TODO(MXG): Consider issuing a warning here
+          return responder->forfeit({});
+        }
+
+        negotiator->clober_respond(table_viewer, responder, target_robot_id, target_start,
+            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
+    }
+  #endif
 
 };
 } // anonymous namespace
@@ -860,6 +894,10 @@ auto FleetUpdateHandle::Implementation::allocate_tasks(
   rmf_task::ConstRequestPtr new_request,
   rmf_task::ConstRequestPtr ignore_request) const -> std::optional<Assignments>
 {
+  #ifdef CLOBER_RMF
+  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks ~~ "<<std::endl;
+  #endif
+
   // Collate robot states, constraints and combine new requestptr with
   // requestptr of non-charging tasks in task manager queues
   std::vector<rmf_task::agv::State> states;
@@ -914,10 +952,17 @@ auto FleetUpdateHandle::Implementation::allocate_tasks(
     pending_requests.size());
 
   // Generate new task assignments
+  // 변경점
+  #ifdef CLOBER_RMF
+  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 시작 "<<std::endl;
+  #endif
   const auto result = task_planner->plan(
     rmf_traffic_ros2::convert(node->now()),
     states,
     pending_requests);
+  #ifdef CLOBER_RMF
+  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 결과 "<<std::endl;
+  #endif
 
   auto assignments_ptr = std::get_if<
     rmf_task::agv::TaskPlanner::Assignments>(&result);
@@ -1033,7 +1078,9 @@ void FleetUpdateHandle::add_robot(
           state,
           fleet->_pimpl->task_planner
         });
-
+      #ifdef CLOBER_RMF
+      std::cout <<"FleetUpdateHandle::add_robot ~~"<<std::endl;
+      #endif
       // We schedule the following operations on the worker to make sure we do not
       // have a multiple read/write race condition on the FleetUpdateHandle.
       worker.schedule(

@@ -65,6 +65,11 @@
 #include <unordered_map>
 #include <utility>
 
+#ifdef CLOBER_RMF
+#include <rmf_fleet_msgs/msg/fleet_state.hpp>
+#include <map>
+#endif
+
 namespace rmf_traffic_ros2 {
 namespace schedule {
 
@@ -251,6 +256,13 @@ public:
   std::condition_variable conflict_check_cv;
   std::atomic_bool conflict_check_quit;
 
+  #ifdef CLOBER_RMF
+  using FleetState = rmf_fleet_msgs::msg::FleetState;
+  using FleetStateSub = rclcpp::Subscription<FleetState>;
+  FleetStateSub::SharedPtr fleet_state_sub;
+  void receive_fleet_state(const FleetState& msg);
+  #endif
+
   using ConflictAck = rmf_traffic_msgs::msg::NegotiationAck;
   using ConflictAckSub = rclcpp::Subscription<ConflictAck>;
   ConflictAckSub::SharedPtr conflict_ack_sub;
@@ -290,6 +302,16 @@ public:
   using ConflictSet = std::unordered_set<ParticipantId>;
 
   using Negotiation = rmf_traffic::schedule::Negotiation;
+
+  #ifdef CLOBER_RMF
+  std::vector<ScheduleNode::ConflictSet> get_conflicts(
+    const rmf_traffic::schedule::Viewer::View& view_changes,
+    const rmf_traffic::schedule::ItineraryViewer& viewer);
+
+  std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> get_conflicts2(
+    const rmf_traffic::schedule::Viewer::View& view_changes,
+    const rmf_traffic::schedule::ItineraryViewer& viewer);
+  #endif
 
   class ConflictRecord
   {
@@ -491,6 +513,10 @@ public:
   // description versions separately from itinerary versions.
   std::size_t last_known_participants_version = 0;
   std::size_t current_participants_version = 1;
+
+  #ifdef CLOBER_RMF
+  std::map<const std::string, Eigen::Vector2d> _fleet;
+  #endif
 };
 
 } // namespace schedule

@@ -27,23 +27,38 @@ namespace jobs {
 template<typename Subscriber, typename Worker>
 void Planning::operator()(const Subscriber& s, const Worker& w)
 {
+  #ifdef CLOBER_RMF
+  std::cout <<"impl_Planning.hpp 진입 " << std::endl;
+  #endif
+
   _resume = [a = weak_from_this(), s, w]()
     {
       w.schedule([a, s, w](const auto&)
         {
+          #ifdef CLOBER_RMF
+          std::cout <<"impl_Planning.hpp ~~ 들어가는지 확인 " << std::endl;
+          #endif
           if (const auto action = a.lock())
             (*action)(s, w);
         });
     };
-
+    
+  #ifdef CLOBER_RMF
+  std::cout <<"impl_Planning.hpp ~~ call schedule " << std::endl;
+  #endif
   if (!_current_result)
     return;
 
+  // _current_result->clober_resume();
+  
   _current_result->resume();
 
   const bool completed =
     _current_result->success() || !_current_result->cost_estimate();
 
+  #ifdef CLOBER_RMF
+  std::cout <<"completed : " <<completed << std::endl;
+  #endif
   s.on_next(Result{*this});
   if (completed)
   {

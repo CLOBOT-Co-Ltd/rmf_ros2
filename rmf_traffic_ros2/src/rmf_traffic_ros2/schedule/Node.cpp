@@ -37,9 +37,17 @@
 
 #include <unordered_map>
 
+#ifndef CLOBER_RMF
+#include <rmf_traffic/DetectConflict.hpp>
+#else
+#include <rmf_traffic/CloberDetectConflict.hpp>
+#include <map>
+#endif
+
 namespace rmf_traffic_ros2 {
 namespace schedule {
 
+#ifndef CLOBER_RMF
 //==============================================================================
 std::vector<ScheduleNode::ConflictSet> get_conflicts(
   const rmf_traffic::schedule::Viewer::View& view_changes,
@@ -96,6 +104,164 @@ std::vector<ScheduleNode::ConflictSet> get_conflicts(
 
   return conflicts;
 }
+
+#else
+//==============================================================================
+std::vector<ScheduleNode::ConflictSet> ScheduleNode::get_conflicts(
+  const rmf_traffic::schedule::Viewer::View& view_changes,
+  const rmf_traffic::schedule::ItineraryViewer& viewer)
+{
+  std::vector<ScheduleNode::ConflictSet> conflicts;
+  const auto& participants = viewer.participant_ids();
+
+  for (const auto participant : participants)
+  {
+    if(participant > 1) continue;
+
+    const auto itinerary = *viewer.get_itinerary(participant);
+    const auto description = viewer.get_participant(participant);
+    if (!description)
+      continue;
+    
+    std::cout << "[Node.cpp] " << participant << "\'s itinerary size : "<< itinerary.size() << std::endl;
+
+    for (auto vc = view_changes.begin(); vc != view_changes.end(); ++vc)
+    {
+      if (vc->participant == participant)
+      {
+        // There's no need to check a participant against itself
+        // const auto a_it = _fleet.find(vc->description.name());
+        // _fleet.erase(a_it);
+        continue;
+      }
+      std::cout << "=========================================================" << std::endl;
+      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
+      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
+
+      if(!_fleet.count(description->name()) || !_fleet.count(vc->description.name()))
+        continue;
+
+      const auto a_it = _fleet.find(description->name());
+      _fleet.erase(a_it);
+      Eigen::Vector2d pos_a = a_it->second;
+
+      const auto b_it = _fleet.find(vc->description.name());
+      _fleet.erase(b_it);
+      Eigen::Vector2d pos_b = b_it->second;
+
+      // std::cout << "[Node.cpp] get_conflicts pos_a fleet state: " << pos_a.x() << " , " << pos_a.y() << std::endl;
+      // std::cout << "[Node.cpp] get_conflicts pos_b fleet state: " << pos_b.x() << " , " << pos_b.y() << std::endl;
+
+      for (const auto& route : itinerary)
+      {
+        // std::cout << "[Node.cpp] Viewer\'s Route map: " << route->map() << std::endl; // L1
+        // std::cout << "[Node.cpp] Viewer\'s Route Trajectory Size: " << route->trajectory().size() << std::endl;
+        // std::cout << "---------------------------------------------------------" << std::endl;
+        // rmf_traffic::Time start_time = *route->trajectory().start_time();
+        // std::cout << "[Node.cpp] " << description->name() << "\'s Waypoint[x,y,a,t] : " << std::endl;
+        // for(int i = 0; i < route->trajectory().size(); i++) {
+        //   const rmf_traffic::Trajectory::Waypoint& way = route->trajectory()[i];
+        //   const auto rel_time = way.time() - start_time;
+
+        //   std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << ", " << rmf_traffic::time::to_seconds(rel_time) << "]" << std::endl;
+        // }
+        // std::cout << "---------------------------------------------------------" << std::endl;
+        // rmf_traffic::Time start_time_2 = *vc->route.trajectory().start_time();
+        // std::cout << "[Node.cpp] " << vc->description.name() << "\'s Waypoint[x,y,a,t] : " << std::endl;
+        // for(int i = 0; i < vc->route.trajectory().size(); i++) {
+        //   const rmf_traffic::Trajectory::Waypoint& way = vc->route.trajectory()[i];
+        //   const auto rel_time = way.time() - start_time_2;
+
+        //   std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << ", " << rmf_traffic::time::to_seconds(rel_time) << "]" << std::endl;
+        // }
+        // std::cout << std::endl;
+        
+        assert(route);
+        if (route->map() != vc->route.map())
+          continue;
+
+        if (rmf_traffic::CloberDetectConflict::between(
+            vc->description.name(),
+            vc->route.trajectory(),
+            pos_b,
+            description->name(),
+            route->trajectory(),
+            pos_a))
+        {
+          conflicts.push_back({participant, vc->participant});
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+//==============================================================================
+std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> ScheduleNode::get_conflicts2(
+  const rmf_traffic::schedule::Viewer::View& view_changes,
+  const rmf_traffic::schedule::ItineraryViewer& viewer) 
+{
+  std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> conflicts;
+
+  const auto& participants = viewer.participant_ids();
+
+  for (const auto participant : participants)
+  {
+    if(participant > 1) continue;
+
+    const auto itinerary = *viewer.get_itinerary(participant);
+    const auto description = viewer.get_participant(participant);
+    if (!description)
+      continue;
+    
+    for (auto vc = view_changes.begin(); vc != view_changes.end(); ++vc)
+    {
+      if (vc->participant == participant)
+      {
+        // There's no need to check a participant against itself
+        continue;
+      }
+
+      if(!_fleet.count(description->name()) || !_fleet.count(vc->description.name()))
+        continue;
+
+      const auto a_it = _fleet.find(description->name());
+      _fleet.erase(a_it);
+      Eigen::Vector2d pos_a = a_it->second;
+
+      const auto b_it = _fleet.find(vc->description.name());
+      _fleet.erase(b_it);
+      Eigen::Vector2d pos_b = b_it->second;
+
+      for (const auto& route : itinerary)
+      {
+        assert(route);
+        if (route->map() != vc->route.map())
+          continue;
+
+        ScheduleNode::ConflictNotice conflict_notice;
+
+        conflict_notice = 
+        rmf_traffic::CloberDetectConflict::between2(
+          vc->description.name(),
+          vc->route.trajectory(),
+          pos_b,
+          description->name(),
+          route->trajectory(),
+          pos_a);
+        
+        if(!conflict_notice.robot_info.empty()) {
+          ScheduleNode::ConflictSet set = {participant, vc->participant};
+          conflicts.push_back(std::make_pair(set, conflict_notice));
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+#endif
 
 //==============================================================================
 // This constructor will _not_ automatically call the setup() method to finalise
@@ -345,6 +511,16 @@ void ScheduleNode::setup_incosistency_pub()
 void ScheduleNode::setup_conflict_topics_and_thread()
 {
   const auto negotiation_qos = rclcpp::ServicesQoS().reliable();
+
+  #ifdef CLOBER_RMF
+  fleet_state_sub = create_subscription<FleetState>(
+    "/fleet_states", negotiation_qos,
+    [&](const rmf_fleet_msgs::msg::FleetState::UniquePtr msg)
+    {
+      this->receive_fleet_state(*msg);
+    });
+  #endif
+
   conflict_ack_sub = create_subscription<ConflictAck>(
     rmf_traffic_ros2::NegotiationAckTopicName, negotiation_qos,
     [&](const ConflictAck::UniquePtr msg)
@@ -451,6 +627,7 @@ void ScheduleNode::setup_conflict_topics_and_thread()
           }
         }
 
+        #ifndef CLOBER_RMF
         const auto conflicts = get_conflicts(view_changes, mirror);
         std::unordered_map<Version, const Negotiation*> new_negotiations;
         for (const auto& conflict : conflicts)
@@ -473,6 +650,38 @@ void ScheduleNode::setup_conflict_topics_and_thread()
 
           conflict_notice_pub->publish(msg);
         }
+        #else
+        const auto conflicts = get_conflicts2(view_changes, mirror);
+
+        std::unordered_map<Version, const Negotiation*> new_negotiations;
+        std::unordered_map<Version, ScheduleNode::ConflictNotice> new_conflicts;
+        for (const auto& conflict : conflicts)
+        {
+          std::unique_lock<std::mutex> lock(active_conflicts_mutex);
+          const auto new_negotiation = active_conflicts.insert(conflict.first);
+
+          if (new_negotiation) {
+            new_negotiations[new_negotiation->first] = new_negotiation->second;
+            new_conflicts[new_negotiation->first] = conflict.second;
+          }
+        }
+
+        for (const auto& n : new_negotiations)
+        {
+
+          ConflictNotice msg;
+          msg.conflict_version = n.first;
+
+          const auto& participants = n.second->participants();
+          msg.participants = ConflictNotice::_participants_type(
+            participants.begin(), participants.end());
+
+          const auto msg_it = new_conflicts.find(n.first);
+          msg.robot_info = msg_it->second.robot_info;
+          
+          conflict_notice_pub->publish(msg);
+        }
+        #endif
       }
     });
 }
@@ -1011,6 +1220,27 @@ void print_conclusion(
   }
   std::cout << "\n" << std::endl;
 }
+
+#ifdef CLOBER_RMF
+//==============================================================================
+void ScheduleNode::receive_fleet_state(const FleetState& msg)
+{
+  std::unique_lock<std::mutex> lock(active_conflicts_mutex);
+  const std::string fleet = msg.name;
+  
+  for (const auto& state : msg.robots)
+  {
+    const std::string fleet_name = state.name;
+    double x = state.location.x;
+    double y = state.location.y;
+
+    // std::cout << "[Node.cpp] update fleet state: " << fleet_name << " , " << x << " , " << y << std::endl;
+    
+    _fleet.insert({state.name, Eigen::Vector2d(x,y)});
+    // _fleet.push_back(std::make_pair(fleet_name, Eigen::Vector2d(x,y)));
+  }
+}
+#endif
 
 //==============================================================================
 void ScheduleNode::receive_conclusion_ack(const ConflictAck& msg)

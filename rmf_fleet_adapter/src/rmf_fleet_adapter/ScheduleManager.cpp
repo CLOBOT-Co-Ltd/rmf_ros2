@@ -113,6 +113,29 @@ void ScheduleManager::Negotiator::respond(
   callback(table, responder);
 }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+void ScheduleManager::Negotiator::clober_respond(
+  const rmf_traffic::schedule::Negotiation::Table::ViewerPtr& table,
+  const ResponderPtr& responder,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path)
+{
+    std::cout <<"ScheduleManager::Negotiator::clober_respond id : " << target_robot_id <<std::endl;
+    if (!callback)
+      return;
+
+    callback(table, responder);
+}
+#endif
+
 //==============================================================================
 std::future<ScheduleManager> make_schedule_manager(
   rclcpp::Node& node,

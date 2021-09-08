@@ -306,6 +306,30 @@ void RobotContext::respond(
     table_viewer, responder);
 }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+void RobotContext::clober_respond(
+  const TableViewerPtr& table_viewer,
+  const ResponderPtr& responder,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path)
+{
+    std::cout <<"RobotContext::clober_respond id : " << target_robot_id <<std::endl;
+
+  if (_negotiator)
+    return _negotiator->clober_respond(table_viewer, responder, target_robot_id, target_start,
+            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
+
+}
+#endif
+
 //==============================================================================
 void RobotContext::current_mode(uint32_t mode)
 {

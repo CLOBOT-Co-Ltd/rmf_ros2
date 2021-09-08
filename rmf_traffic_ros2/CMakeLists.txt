@@ -54,14 +54,35 @@ if(BUILD_TESTING)
   add_executable(missing_query_schedule_node
     test/mock_schedule_nodes/missing_query_schedule.cpp
   )
-  target_include_directories(missing_query_schedule_node
-    PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-      ${rmf_traffic_msgs_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
-      "src"
-  )
+  if(DEFINED ENV{CLOBER_RMF}) # clober
+    if($ENV{CLOBER_RMF} EQUAL 1)
+      target_include_directories(missing_query_schedule_node
+        PUBLIC
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+          ${rmf_traffic_msgs_INCLUDE_DIRS}
+          ${rmf_fleet_msgs_INCLUDE_DIRS}
+          ${rclcpp_INCLUDE_DIRS}
+          "src"
+      )
+    else()
+      target_include_directories(missing_query_schedule_node
+        PUBLIC
+          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+          ${rclcpp_INCLUDE_DIRS}
+          "src"
+      )
+    endif()
+  else()
+    target_include_directories(missing_query_schedule_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  endif()
   target_link_libraries(missing_query_schedule_node rmf_traffic_ros2)
 
   add_executable(missing_query_monitor_node

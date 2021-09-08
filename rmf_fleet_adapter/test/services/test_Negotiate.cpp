@@ -410,6 +410,24 @@ public:
     _services.insert(std::move(negotiate));
   }
 
+    #ifdef CLOBER_RMF
+    virtual void clober_respond(
+      const TableViewerPtr& table_viewer,
+      const ResponderPtr& responder,
+      std::string target_robot_id,
+      std::string target_start,
+      std::string target_end,
+      std::vector<std::string> target_path,
+      std::string enemy_robot_id,
+      std::string enemy_start,
+      std::size_t enemy_startidx,
+      std::string enemy_end,
+      std::vector<std::string> enemy_path) final
+    {
+        std::cout <<"TestPathNegotiator::clober_respond id : " << target_robot_id <<std::endl;
+    }
+    #endif
+
 private:
   std::shared_ptr<rmf_traffic::agv::Planner> _planner;
   rmf_traffic::agv::Plan::StartSet _starts;
@@ -545,6 +563,24 @@ public:
     _services.insert(std::move(negotiate));
   }
 
+    #ifdef CLOBER_RMF
+    virtual void clober_respond(
+      const TableViewerPtr& table_viewer,
+      const ResponderPtr& responder,
+      std::string target_robot_id,
+      std::string target_start,
+      std::string target_end,
+      std::vector<std::string> target_path,
+      std::string enemy_robot_id,
+      std::string enemy_start,
+      std::size_t enemy_startidx,
+      std::string enemy_end,
+      std::vector<std::string> enemy_path) final
+    {
+        std::cout <<"TestEmergencyNegotiator::clober_respond id : " << std::endl;
+    }
+    #endif
+    
 private:
   std::shared_ptr<rmf_traffic::agv::Planner> _planner;
   rmf_traffic::agv::Plan::StartSet _starts;

@@ -569,6 +569,9 @@ void TaskManager::retreat_to_charger()
   {
     const rmf_traffic::agv::Planner::Goal retreat_goal{
       current_state.charging_waypoint()};
+    #ifdef CLOBER_RMF
+    std::cout <<"TaskManager::retreat_to_charger plan 호출 " << std::endl;
+    #endif
     const auto result_to_charger = parameters.planner()->plan(
       current_state.location(), retreat_goal);
 
@@ -612,6 +615,7 @@ void TaskManager::retreat_to_charger()
       current_state.finish_time(),
       parameters);
 
+    std::cout << "TaskManager::retreat_to_charger model estimate_finish 호출"<<std::endl;
     const auto finish = model->estimate_finish(
       current_state,
       constraints,

@@ -46,6 +46,9 @@ SearchForPath::SearchForPath(
     greedy_starts.erase(greedy_starts.begin()+1, greedy_starts.end());
 
   auto greedy_setup = _planner->setup(greedy_starts, _goal, greedy_options);
+  #ifdef CLOBER_RMF
+  std::cout <<"greedy planner setup!! " << std::endl;
+  #endif
   if (!greedy_setup.cost_estimate())
   {
     // If this ever happens, then there is a serious bug.

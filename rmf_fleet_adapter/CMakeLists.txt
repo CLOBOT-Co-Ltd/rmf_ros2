@@ -334,6 +334,12 @@ add_executable(robot_state_aggregator
   src/robot_state_aggregator/main.cpp
 )
 
+if(DEFINED ENV{CLOBER_RMF}) # clober
+  if($ENV{CLOBER_RMF} EQUAL 1)
+    add_compile_definitions(CLOBER_RMF)
+  endif()
+endif()
+
 if(DEFINED ENV{RMF_ENABLE_FAILOVER})
   if($ENV{RMF_ENABLE_FAILOVER} EQUAL 1)
     add_compile_definitions(FAILOVER_MODE)

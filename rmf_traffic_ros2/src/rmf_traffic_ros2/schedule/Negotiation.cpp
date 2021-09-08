@@ -452,8 +452,14 @@ public:
         }
 
         const auto& negotiator = n_it->second;
+        #ifdef CLOBER_RMF
+        std::cout <<"Negotiation respond_to_queue respond 호출 "<<std::endl;
+        #endif
         negotiator->respond(
           top->viewer(), Responder::make(this, conflict_version, top));
+        #ifdef CLOBER_RMF
+        std::cout <<"Negotiation respond_to_queue respond 결과 "<<std::endl;
+        #endif
       }
 
       if (top->submission())
@@ -469,8 +475,89 @@ public:
     }
   }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+    void clober_respond_to_queue(
+    std::vector<TablePtr> queue,
+    const Notice& msg)
+  {
+
+    while (!queue.empty())
+    {
+      const auto top = queue.back();
+      queue.pop_back();
+
+      if (top->defunct())
+        continue;
+
+      if (!top->submission())
+      {
+        const auto n_it = negotiators->find(top->participant());
+        if (n_it == negotiators->end())
+          continue;
+
+        // TODO(MXG): Make this limit configurable
+        if (top->version() > 3)
+        {
+          // Give up on this table at this point to avoid an infinite loop
+          top->forfeit(top->version());
+          publish_forfeit(msg.conflict_version, *top);
+          continue;
+        }
+
+        const auto& negotiator = n_it->second;
+
+        std::cout <<"Negotiation clober_respond_to_queue respond 호출 "<<std::endl;
+
+        // negotiator->respond(
+        //   top->viewer(), Responder::make(this, conflict_version, top));
+
+        if ( msg.robot_info.size() == 2){
+          std::string target_robot_id = msg.robot_info[0].robotid;
+          std::string target_start = msg.robot_info[0].start;
+          std::string target_end = msg.robot_info[0].end;
+          std::vector<std::string> target_path = msg.robot_info[0].path;
+
+          std::string enemy_robot_id = msg.robot_info[1].robotid;
+          std::string enemy_start = msg.robot_info[1].start;
+          std::size_t enemy_startidx = msg.robot_info[1].startidx;
+          std::string enemy_end = msg.robot_info[1].end;
+          std::vector<std::string> enemy_path = msg.robot_info[1].path;
+
+          negotiator->clober_respond(
+            top->viewer(), Responder::make(this, msg.conflict_version, top), target_robot_id, target_start,
+            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
+        }else{
+          std::cout <<"negotiation target, enemy 각각의 정보가 들어있는지 확인필요." << std::endl;
+        }
+
+
+
+        std::cout <<"Negotiation clober_respond_to_queue respond 결과 "<<std::endl;
+      }
+
+      if (top->submission())
+      {
+        for (const auto& c : top->children())
+          queue.push_back(c);
+      }
+      else if (const auto& parent = top->parent())
+      {
+        if (parent->rejected())
+          queue.push_back(parent);
+      }
+    }
+  }
+#endif
+
   void receive_notice(const Notice& msg)
   {
+    #ifdef CLOBER_RMF
+    std::cout <<"msg robot size : " << msg.robot_info.size() << std::endl;
+    for(int i=0; i<msg.robot_info.size(); i++){
+      std::cout <<"nego notice robot id : " << msg.robot_info[i].robotid << std::endl;
+    }
+    #endif
     bool relevant = false;
     for (const auto p : msg.participants)
     {
@@ -538,7 +625,11 @@ public:
     for (const auto p : negotiation.participants())
       queue.push_back(negotiation.table(p, {}));
 
+    #ifndef CLOBER_RMF
     respond_to_queue(queue, msg.conflict_version);
+    #else
+    clober_respond_to_queue(queue, msg);
+    #endif
   }
 
   void receive_proposal(const Proposal& msg)

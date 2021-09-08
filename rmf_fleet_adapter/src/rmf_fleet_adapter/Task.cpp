@@ -173,6 +173,9 @@ void Task::_start_next_phase()
       "[Task::_start_next_phase] INTERNAL ERROR: Next phase has a null value");
     // *INDENT-ON*
   }
+  #ifdef CLOBER_RMF
+  std::cout <<"Task::_start_next_phase()" <<std::endl;
+  #endif
   _active_phase = next_pending->begin();
 
   _active_phase_subscription =

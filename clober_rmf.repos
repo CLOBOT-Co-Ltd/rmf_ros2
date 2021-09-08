@@ -1,8 +1,8 @@
 repositories:
   rmf/rmf_battery:
     type: git
-    url: https://github.com/open-rmf/rmf_battery.git
-    version: main
+    url: https://github.com/CLOBOT-Co-Ltd/rmf_battery.git
+    version: clober-dev
   rmf/rmf_internal_msgs:
     type: git
     url: https://github.com/CLOBOT-Co-Ltd/rmf_internal_msgs.git

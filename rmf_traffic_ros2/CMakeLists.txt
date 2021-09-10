@@ -73,51 +73,84 @@ if(BUILD_TESTING)
         "src"
     )
   endif()
-
+  
   target_link_libraries(missing_query_schedule_node rmf_traffic_ros2)
 
   add_executable(missing_query_monitor_node
     test/mock_monitor_nodes/missing_query_monitor.cpp
   )
-  target_include_directories(missing_query_monitor_node
-    PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-      ${rmf_traffic_msgs_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
-      "src"
-  )
+  if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+    target_include_directories(missing_query_monitor_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  else()
+    target_include_directories(missing_query_monitor_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rmf_fleet_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  endif()
   target_link_libraries(missing_query_monitor_node rmf_traffic_ros2)
 
   add_executable(wrong_query_schedule_node
     test/mock_schedule_nodes/wrong_query.cpp
   )
-  target_include_directories(wrong_query_schedule_node
-    PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-      ${rmf_traffic_msgs_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
-      "src"
-  )
+  if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+    target_include_directories(wrong_query_schedule_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  else()
+    target_include_directories(wrong_query_schedule_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rmf_fleet_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  endif()
+  
   target_link_libraries(wrong_query_schedule_node rmf_traffic_ros2)
 
   add_executable(delayed_query_broadcast_monitor_node
     test/mock_monitor_nodes/delayed_query_broadcast_monitor.cpp
   )
-  target_include_directories(delayed_query_broadcast_monitor_node
-    PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-      ${rmf_traffic_msgs_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
-      "src"
-  )
+  if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+    target_include_directories(delayed_query_broadcast_monitor_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  else()
+    target_include_directories(delayed_query_broadcast_monitor_node
+      PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${rmf_traffic_msgs_INCLUDE_DIRS}
+        ${rmf_fleet_msgs_INCLUDE_DIRS}
+        ${rclcpp_INCLUDE_DIRS}
+        "src"
+    )
+  endif()
   target_link_libraries(delayed_query_broadcast_monitor_node rmf_traffic_ros2)
-
-if(DEFINED ENV{CLOBER_RMF}) # clober
-  add_compile_definitions(CLOBER_RMF)
-endif()
 
   install(
     TARGETS
@@ -132,21 +165,43 @@ endif()
 file(GLOB_RECURSE core_lib_srcs "src/rmf_traffic_ros2/*.cpp")
 add_library(rmf_traffic_ros2 SHARED ${core_lib_srcs})
 
-target_link_libraries(rmf_traffic_ros2
-  PUBLIC
-    rmf_traffic::rmf_traffic
-    ${rmf_traffic_msgs_LIBRARIES}
-    ${rclcpp_LIBRARIES}
-    yaml-cpp
-)
+if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+  target_link_libraries(rmf_traffic_ros2
+    PUBLIC
+      rmf_traffic::rmf_traffic
+      ${rmf_traffic_msgs_LIBRARIES}
+      ${rclcpp_LIBRARIES}
+      yaml-cpp
+  )
+else()
+    target_link_libraries(rmf_traffic_ros2
+      PUBLIC
+        rmf_traffic::rmf_traffic
+        ${rmf_traffic_msgs_LIBRARIES}
+        ${rmf_fleet_msgs_LIBRARIES}
+        ${rclcpp_LIBRARIES}
+        yaml-cpp
+    )
+endif()
 
-target_include_directories(rmf_traffic_ros2
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    ${rmf_traffic_msgs_INCLUDE_DIRS}
-    ${rclcpp_INCLUDE_DIRS}
-)
+if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+  target_include_directories(rmf_traffic_ros2
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      ${rmf_traffic_msgs_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+  )
+else()
+  target_include_directories(rmf_traffic_ros2
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      ${rmf_traffic_msgs_INCLUDE_DIRS}
+      ${rmf_fleet_msgs_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+  )
+endif()
 
 ament_export_targets(rmf_traffic_ros2 HAS_LIBRARY_TARGET)
 ament_export_dependencies(
@@ -198,6 +253,10 @@ target_link_libraries(participant_node PUBLIC rmf_traffic_ros2)
 #===============================================================================
 add_executable(update_participant src/update_participant/main.cpp)
 target_link_libraries(update_participant PRIVATE rmf_traffic_ros2)
+
+if(DEFINED ENV{CLOBER_RMF}) # clober
+  add_compile_definitions(CLOBER_RMF)
+endif()
 
 #===============================================================================
 install(

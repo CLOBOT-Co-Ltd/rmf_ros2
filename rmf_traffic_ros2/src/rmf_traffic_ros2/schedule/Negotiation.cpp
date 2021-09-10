@@ -554,7 +554,7 @@ public:
   {
     #ifdef CLOBER_RMF
     std::cout <<"msg robot size : " << msg.robot_info.size() << std::endl;
-    for(int i=0; i<msg.robot_info.size(); i++){
+    for(std::size_t i=0; i<msg.robot_info.size(); i++){
       std::cout <<"nego notice robot id : " << msg.robot_info[i].robotid << std::endl;
     }
     #endif
@@ -1265,11 +1265,30 @@ public:
     _respond(std::move(table_viewer), std::move(responder));
   }
 
+  #ifdef CLOBER_RMF
+  void clober_respond(
+    const TableViewerPtr& table_viewer,
+    const ResponderPtr& responder,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path)
+  {
+    
+  }
+  #endif
+
 private:
   RespondFn _respond;
 };
 
 //==============================================================================
+// #ifndef CLOBER_RMF
 std::shared_ptr<void> Negotiation::register_negotiator(
   rmf_traffic::schedule::ParticipantId for_participant,
   std::function<void(TableViewPtr, ResponderPtr)> respond,
@@ -1280,6 +1299,7 @@ std::shared_ptr<void> Negotiation::register_negotiator(
     std::make_unique<LambdaNegotiator>(std::move(respond)),
     std::move(on_negotiation_failure));
 }
+// #endif
 
 } // namespace schedule
 } // namespace rmf_traffic_ros2

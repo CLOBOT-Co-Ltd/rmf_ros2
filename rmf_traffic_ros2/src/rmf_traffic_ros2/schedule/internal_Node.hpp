@@ -238,6 +238,10 @@ public:
   std::mutex database_mutex;
   std::shared_ptr<rmf_traffic::schedule::Database> database;
 
+  #ifdef CLOBER_RMF
+  std::string conflict_graph_file;
+  #endif
+  
   struct QueryInfo
   {
     rmf_traffic::schedule::Query query;

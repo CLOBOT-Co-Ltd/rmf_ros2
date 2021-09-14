@@ -249,7 +249,8 @@ std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> 
           pos_b,
           description->name(),
           route->trajectory(),
-          pos_a);
+          pos_a,
+          conflict_graph_file);
         
         if(!conflict_notice.robot_info.empty()) {
           ScheduleNode::ConflictSet set = {participant, vc->participant};
@@ -292,6 +293,11 @@ ScheduleNode::ScheduleNode(
   // than a simple wall timer
   mirror_update_timer = create_wall_timer(
     std::chrono::milliseconds(10), [this]() { this->update_mirrors(); });
+
+  #ifdef CLOBER_RMF
+  std::string conflict_config_name = "conf_graph_file";
+  conflict_graph_file = declare_parameter(conflict_config_name, std::string());
+  #endif
 }
 
 //==============================================================================

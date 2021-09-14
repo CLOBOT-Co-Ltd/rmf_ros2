@@ -352,7 +352,7 @@ private:
         continue;
       }
       #ifdef CLOBER_RMF
-      std::cout <<" MockTrafficLightCommandHandle 에서 plan 호출" <<std::endl;
+      // std::cout <<" MockTrafficLightCommandHandle 에서 plan 호출" <<std::endl;
       #endif
       const auto result = _planner->plan(starts, goal->index());
       if (!result)

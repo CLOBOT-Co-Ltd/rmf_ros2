@@ -76,6 +76,7 @@ public:
       // forfeit.
       //
       // TODO(MXG): Consider issuing a warning here
+      std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [FleetUpdateHandle.cpp]" << std::endl;
       return responder->forfeit({});
     }
 
@@ -104,6 +105,7 @@ public:
           // forfeit.
           //
           // TODO(MXG): Consider issuing a warning here
+          std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [FleetUpdateHandle.cpp] 2" << std::endl;
           return responder->forfeit({});
         }
 
@@ -895,7 +897,7 @@ auto FleetUpdateHandle::Implementation::allocate_tasks(
   rmf_task::ConstRequestPtr ignore_request) const -> std::optional<Assignments>
 {
   #ifdef CLOBER_RMF
-  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks ~~ "<<std::endl;
+  // std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks ~~ "<<std::endl;
   #endif
 
   // Collate robot states, constraints and combine new requestptr with
@@ -954,14 +956,14 @@ auto FleetUpdateHandle::Implementation::allocate_tasks(
   // Generate new task assignments
   // 변경점
   #ifdef CLOBER_RMF
-  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 시작 "<<std::endl;
+  // std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 시작 "<<std::endl;
   #endif
   const auto result = task_planner->plan(
     rmf_traffic_ros2::convert(node->now()),
     states,
     pending_requests);
   #ifdef CLOBER_RMF
-  std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 결과 "<<std::endl;
+  // std::cout <<"FleetUpdateHandle::Implementation::allocate_tasks optimal_plan 결과 "<<std::endl;
   #endif
 
   auto assignments_ptr = std::get_if<
@@ -1079,7 +1081,7 @@ void FleetUpdateHandle::add_robot(
           fleet->_pimpl->task_planner
         });
       #ifdef CLOBER_RMF
-      std::cout <<"FleetUpdateHandle::add_robot ~~"<<std::endl;
+      // std::cout <<"FleetUpdateHandle::add_robot ~~"<<std::endl;
       #endif
       // We schedule the following operations on the worker to make sure we do not
       // have a multiple read/write race condition on the FleetUpdateHandle.

@@ -140,6 +140,7 @@ check_cache(const NegotiatorMap& negotiators)
       const auto table = search.table;
       if (table)
       {
+        std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [NegotiationRoom.cpp]" << std::endl;
         table->forfeit(forfeit.table.back().version);
         recheck = true;
         cached_forfeits.erase(it++);

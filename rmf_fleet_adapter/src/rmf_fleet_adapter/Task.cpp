@@ -174,7 +174,7 @@ void Task::_start_next_phase()
     // *INDENT-ON*
   }
   #ifdef CLOBER_RMF
-  std::cout <<"Task::_start_next_phase()" <<std::endl;
+  // std::cout <<"Task::_start_next_phase()" <<std::endl;
   #endif
   _active_phase = next_pending->begin();
 

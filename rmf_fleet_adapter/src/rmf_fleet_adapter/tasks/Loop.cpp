@@ -48,7 +48,7 @@ std::shared_ptr<Task> make_loop(
       rmf_traffic::agv::Planner::Goal goal{start_waypoint};
 
       #ifdef CLOBER_RMF
-      std::cout <<"Loop.cpp make_loop(loop_start) 에서 plan 호출 " <<std::endl;
+      // std::cout <<"Loop.cpp make_loop(loop_start) 에서 plan 호출 " <<std::endl;
       #endif
       const auto result = context->planner()->plan(start, goal);
       // We assume we can always compute a plan
@@ -71,7 +71,7 @@ std::shared_ptr<Task> make_loop(
       rmf_traffic::agv::Planner::Goal goal{finish_waypoint};
       
       #ifdef CLOBER_RMF
-      std::cout <<"Loop.cpp make_loop(loop_end) 에서 plan 호출 " <<std::endl;
+      // std::cout <<"Loop.cpp make_loop(loop_end) 에서 plan 호출 " <<std::endl;
       #endif
       const auto result = context->planner()->plan(loop_start, goal);
       // We assume we can always compute a plan

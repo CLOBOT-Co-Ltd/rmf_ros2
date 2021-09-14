@@ -129,6 +129,7 @@ FleetAdapterNode::ScheduleEntry::ScheduleEntry(
               // the future, we should have a way to wait until the participant
               // information is available.
               assert(false);
+              std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [FleetAdapterNode.cpp]" << std::endl;
               return responder->forfeit({});
             }
 

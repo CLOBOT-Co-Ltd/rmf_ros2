@@ -1764,6 +1764,7 @@ void TrafficLight::UpdateHandle::Implementation::Negotiator::respond(
   {
     // If we no longer have access to the traffic light data or there is no
     // plan being followed, then we simply forfeit the negotiation.
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [TrafficLight.cpp]" << std::endl;
     return responder->forfeit({});
   }
 
@@ -1830,6 +1831,7 @@ void TrafficLight::UpdateHandle::Implementation::Negotiator::respond(
       }
       else
       {
+        std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [TrafficLight.cpp] 2" << std::endl;
         result.service->responder()->forfeit({});
       }
     });

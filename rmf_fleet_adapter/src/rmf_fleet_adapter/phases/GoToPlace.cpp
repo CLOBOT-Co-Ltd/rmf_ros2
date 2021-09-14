@@ -101,7 +101,7 @@ void GoToPlace::Active::clober_respond(
   std::string enemy_end,
   std::vector<std::string> enemy_path)
 {
-  std::cout <<"GoToPlace::Active::clober_respond id : " << target_robot_id <<std::endl;
+  // std::cout <<"GoToPlace::Active::clober_respond id : " << target_robot_id <<std::endl;
 
   // todo
   // 1. excute plan 을 통해 움직이기
@@ -124,14 +124,14 @@ void GoToPlace::Active::clober_respond(
     {
       if (auto active = w.lock())
       {
-        std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출" << std::endl;
+        // std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출" << std::endl;
         active->execute_plan(plan);
 
-        std::cout <<"GoToPlace::Active::clober_respond execute_plan 결과" << std::endl;
+        // std::cout <<"GoToPlace::Active::clober_respond execute_plan 결과" << std::endl;
 
         return active->_context->itinerary().version();
       }
-      std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출하지 않음" << std::endl;
+      // std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출하지 않음" << std::endl;
 
       return rmf_utils::nullopt;
     };
@@ -154,27 +154,50 @@ void GoToPlace::Active::clober_respond(
   }
   else
   {
-    std::cout <<"GoToPlace::Active::clober_respond negotiate 생성" << std::endl;
+    // std::cout <<"GoToPlace::Active::clober_respond negotiate 생성" << std::endl;
 
     negotiate = services::Negotiate::path(
       _context->planner(), _context->location(), _goal, table_viewer,
       responder, std::move(approval_cb), evaluator);
   }
 
-    std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성" << std::endl;
+    // std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성" << std::endl;
 
-    std::cout <<"GoToPlace::Active::clober_respond test clober_plan 호출" << std::endl;
+    // std::cout <<"GoToPlace::Active::clober_respond test clober_plan 호출" << std::endl;
 
-  const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
-   target_robot_id, target_start,
-            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
-  
-  execute_plan(*std::move(test_result));
+  std::cout << "conext name: " << _context->name() << std::endl;
+  // const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
+  //  target_robot_id, target_start,
+  //           target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
 
-
-    std::cout <<"GoToPlace::Active::clober_respond test clober_plan 결과" << std::endl;
+  if(_context->name() == target_robot_id)
+  {
+    const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
+      target_robot_id, target_start, target_end, target_path,
+      enemy_robot_id, enemy_start, 0,  enemy_end, enemy_path);
     
-    // 아래 함수가 plan 호출하는 부분임
+    execute_plan(*std::move(test_result));
+  } else {
+    std::string target_robot_id_ = enemy_robot_id;
+    std::string target_start_ = enemy_start;
+    std::string target_end_ = enemy_end;
+    std::vector<std::string> target_path_ = enemy_path; 
+    std::string enemy_robot_id_ = target_robot_id;
+    std::string enemy_start_ = target_start;
+    std::size_t enemy_startidx_ = 0;
+    std::string enemy_end_ = target_end;
+    std::vector<std::string> enemy_path_ = target_path;
+
+    const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
+      target_robot_id_, target_start_, target_end_, target_path_,
+      enemy_robot_id_, enemy_start_, enemy_startidx_,  enemy_end_, enemy_path_);
+    
+    execute_plan(*std::move(test_result));
+  }
+
+  // std::cout <<"GoToPlace::Active::clober_respond test clober_plan 결과" << std::endl;
+    
+  // 아래 함수가 plan 호출하는 부분임
   // auto negotiate_sub =
   //   rmf_rxcpp::make_job<services::Negotiate::Result>(negotiate)
   //   .observe_on(rxcpp::identity_same_worker(_context->worker()))
@@ -219,7 +242,7 @@ void GoToPlace::Active::clober_respond(
   //   std::move(negotiate_timer)
   // };
 
-  std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 3" << std::endl;
+  // std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 3" << std::endl;
 }
 #endif
 
@@ -239,7 +262,7 @@ void GoToPlace::Active::respond(
   }
 
   #ifdef CLOBER_RMF
-  std::cout << "GoToPlace::Active::respond" << std::endl;
+  // std::cout << "GoToPlace::Active::respond" << std::endl;
   #endif
   auto approval_cb = [w = weak_from_this()](
     const rmf_traffic::agv::Plan& plan)
@@ -248,17 +271,17 @@ void GoToPlace::Active::respond(
       if (auto active = w.lock())
       {
         #ifdef CLOBER_RMF
-        std::cout <<"GoToPlace::Active::respond execute_plan 호출" << std::endl;
+        // std::cout <<"GoToPlace::Active::respond execute_plan 호출" << std::endl;
         #endif
         active->execute_plan(plan);
         #ifdef CLOBER_RMF
-        std::cout <<"GoToPlace::Active::respond execute_plan 결과" << std::endl;
+        // std::cout <<"GoToPlace::Active::respond execute_plan 결과" << std::endl;
         #endif
         return active->_context->itinerary().version();
       }
 
       #ifdef CLOBER_RMF
-      std::cout <<"GoToPlace::Active::respond execute_plan 호출하지 않음" << std::endl;
+      // std::cout <<"GoToPlace::Active::respond execute_plan 호출하지 않음" << std::endl;
       #endif
       return rmf_utils::nullopt;
     };
@@ -316,12 +339,13 @@ void GoToPlace::Active::respond(
         // at least respond by forfeiting.
         const auto service = result.service;
         const auto responder = service->responder();
+        // std::cout << "Check Point" << std::endl;
         responder->forfeit({});
       }
     });
 
   #ifdef CLOBER_RMF
-  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 2" << std::endl;
+  // std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 2" << std::endl;
   #endif
   using namespace std::chrono_literals;
   const auto wait_duration = 2s + table_viewer->sequence().back().version * 10s;
@@ -339,7 +363,7 @@ void GoToPlace::Active::respond(
     std::move(negotiate_timer)
   };
   #ifdef CLOBER_RMF
-  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 3" << std::endl;
+  // std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 3" << std::endl;
   #endif
 }
 
@@ -377,7 +401,7 @@ GoToPlace::Active::Active(
 void GoToPlace::Active::find_plan()
 {
   #ifdef CLOBER_RMF
-  std::cout <<"start find plan "<<std::endl;
+  // std::cout <<"start find plan "<<std::endl;
   #endif
   if (_emergency_active)
     return find_emergency_plan();
@@ -386,8 +410,8 @@ void GoToPlace::Active::find_plan()
   msg.status = "Finding a plan for [" + _context->requester_id()
     + "] to go to [" + std::to_string(_goal.waypoint()) + "]";
   #ifdef CLOBER_RMF
-  std::cout <<"find plna ~~~~ "<< std::endl;
-  std::cout << msg.status << std::endl; 
+  // std::cout <<"find plna ~~~~ "<< std::endl;
+  // std::cout << msg.status << std::endl; 
   #endif
   msg.start_time = _context->node()->now();
   msg.end_time = msg.start_time;
@@ -407,10 +431,10 @@ void GoToPlace::Active::find_plan()
       const services::FindPath::Result& result)
     {
       #ifdef CLOBER_RMF
-      std::cout <<"findpath reuslt~~~~~~~~~~"<<std::endl;
+      // std::cout <<"findpath reuslt~~~~~~~~~~"<<std::endl;
       std::cout << result.success() << std::endl;
       if( result.success()){
-        std::cout <<"result get cost : " << result->get_cost() <<std::endl;
+        // std::cout <<"result get cost : " << result->get_cost() <<std::endl;
       }
       #endif
 
@@ -430,11 +454,11 @@ void GoToPlace::Active::find_plan()
       }
 
       #ifdef CLOBER_RMF
-      std::cout <<"execute plan 호출"<<std::endl;
+      // std::cout <<"execute plan 호출"<<std::endl;
       #endif
       phase->execute_plan(*std::move(result));
       #ifdef CLOBER_RMF
-      std::cout <<"execute plan 결과"<<std::endl;
+      // std::cout <<"execute plan 결과"<<std::endl;
       #endif
       phase->_find_path_service = nullptr;
     });
@@ -657,7 +681,7 @@ void GoToPlace::Active::execute_plan(rmf_traffic::agv::Plan new_plan)
     _plan->get_waypoints();
 
   #ifdef CLOBER_RMF
-  std::cout <<"excute plan ~~~~~ size : " << waypoints.size() << std::endl;
+  // std::cout <<"excute plan ~~~~~ size : " << waypoints.size() << std::endl;
   #endif
 
   std::vector<rmf_traffic::agv::Plan::Waypoint> move_through;
@@ -785,24 +809,24 @@ void GoToPlace::Active::execute_plan(rmf_traffic::agv::Plan new_plan)
     }
     );
   #ifdef CLOBER_RMF
-  std::cout << "set itinerary" << std::endl;
-  std::vector<rmf_traffic::Route> tmp_route;
-  for(std::size_t i = 0; i < _plan->get_itinerary().size(); i++)
-  {
-    tmp_route.push_back(_plan->get_itinerary()[i]);
-  }
+  // std::cout << "set itinerary" << std::endl;
+  // std::vector<rmf_traffic::Route> tmp_route;
+  // for(std::size_t i = 0; i < _plan->get_itinerary().size(); i++)
+  // {
+  //   tmp_route.push_back(_plan->get_itinerary()[i]);
+  // }
   
-  std::cout << "itinerary size: " << tmp_route.size() << std::endl;
-  if(tmp_route.size() > 0) {
-    std::cout << "map name: " << tmp_route[0].map() << std::endl;
+  // std::cout << "itinerary size: " << tmp_route.size() << std::endl;
+  // if(tmp_route.size() > 0) {
+  //   std::cout << "map name: " << tmp_route[0].map() << std::endl;
 
-    std::cout << "Route Trajectory Size: " << tmp_route[0].trajectory().size() << std::endl;
+  //   std::cout << "Route Trajectory Size: " << tmp_route[0].trajectory().size() << std::endl;
     
-    for(std::size_t i = 0; i < tmp_route[0].trajectory().size(); i++) {
-      const rmf_traffic::Trajectory::Waypoint& way = tmp_route[0].trajectory()[i];
-      std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << "]" << std::endl;
-    }
-  }
+  //   for(std::size_t i = 0; i < tmp_route[0].trajectory().size(); i++) {
+  //     const rmf_traffic::Trajectory::Waypoint& way = tmp_route[0].trajectory()[i];
+  //     std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << "]" << std::endl;
+  //   }
+  // }
   #endif
   _subtasks->begin();
   
@@ -813,7 +837,7 @@ void GoToPlace::Active::execute_plan(rmf_traffic::agv::Plan new_plan)
 std::shared_ptr<Task::ActivePhase> GoToPlace::Pending::begin()
 {
   #ifdef CLOBER_RMF
-  std::cout <<"GoToPlace::Pending::begin ~~ "<<std::endl;
+  // std::cout <<"GoToPlace::Pending::begin ~~ "<<std::endl;
   #endif
   auto active =
     std::shared_ptr<Active>(
@@ -877,7 +901,7 @@ auto GoToPlace::make(
   estimate_options.validator(nullptr);
 
   #ifdef CLOBER_RMF
-  std::cout <<"GoToPlace::make planner setup 호출 " << std::endl;
+  // std::cout <<"GoToPlace::make planner setup 호출 " << std::endl;
   #endif
   
   auto estimate = context->planner()->setup(

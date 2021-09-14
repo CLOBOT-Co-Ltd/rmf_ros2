@@ -152,7 +152,7 @@ void Negotiate::operator()(const Subscriber& s)
               {
                 std::vector<rmf_traffic::schedule::ParticipantId> blockers(
                   n->_blockers.begin(), n->_blockers.end());
-
+                std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [impl_Negotiate.hpp]" << std::endl;
                 n->_responder->forfeit(std::move(blockers));
               }
             });

@@ -89,8 +89,10 @@ public:
         responder->impl->timeout,
         [r = std::weak_ptr<Responder>(responder)]()
         {
+          std::cout << "Responder timer check" << std::endl;
           if (auto responder = r.lock())
           {
+            std::cout << "Responder Timeout" << std::endl;
             responder->timer.reset();
             responder->timeout();
           }
@@ -177,18 +179,21 @@ public:
         // TODO(MXG): Consider using blockers to invite more participants into the
         // negotiation
         table->forfeit(table_version);
+        std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
         impl->publish_forfeit(conflict_version, *table);
       }
     }
 
     void timeout()
     {
+      std::cout << "####################3 CheckPoint [Negotiation.cpp] 2" << std::endl;
       if (!responded)
         forfeit({});
     }
 
     ~Responder()
     {
+      std::cout << "~Responder()" << std::endl;
       timeout();
     }
 
@@ -447,18 +452,19 @@ public:
         {
           // Give up on this table at this point to avoid an infinite loop
           top->forfeit(top->version());
+          std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
           publish_forfeit(conflict_version, *top);
           continue;
         }
 
         const auto& negotiator = n_it->second;
         #ifdef CLOBER_RMF
-        std::cout <<"Negotiation respond_to_queue respond 호출 "<<std::endl;
+        // std::cout <<"Negotiation respond_to_queue respond 호출 "<<std::endl;
         #endif
         negotiator->respond(
           top->viewer(), Responder::make(this, conflict_version, top));
         #ifdef CLOBER_RMF
-        std::cout <<"Negotiation respond_to_queue respond 결과 "<<std::endl;
+        // std::cout <<"Negotiation respond_to_queue respond 결과 "<<std::endl;
         #endif
       }
 
@@ -501,13 +507,14 @@ public:
         {
           // Give up on this table at this point to avoid an infinite loop
           top->forfeit(top->version());
+          std::cout << "####################################" << std::endl;
           publish_forfeit(msg.conflict_version, *top);
           continue;
         }
 
         const auto& negotiator = n_it->second;
 
-        std::cout <<"Negotiation clober_respond_to_queue respond 호출 "<<std::endl;
+        // std::cout <<"Negotiation clober_respond_to_queue respond 호출 "<<std::endl;
 
         // negotiator->respond(
         //   top->viewer(), Responder::make(this, conflict_version, top));
@@ -528,12 +535,12 @@ public:
             top->viewer(), Responder::make(this, msg.conflict_version, top), target_robot_id, target_start,
             target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
         }else{
-          std::cout <<"negotiation target, enemy 각각의 정보가 들어있는지 확인필요." << std::endl;
+          // std::cout <<"negotiation target, enemy 각각의 정보가 들어있는지 확인필요." << std::endl;
         }
 
 
 
-        std::cout <<"Negotiation clober_respond_to_queue respond 결과 "<<std::endl;
+        // std::cout <<"Negotiation clober_respond_to_queue respond 결과 "<<std::endl;
       }
 
       if (top->submission())
@@ -553,10 +560,10 @@ public:
   void receive_notice(const Notice& msg)
   {
     #ifdef CLOBER_RMF
-    std::cout <<"msg robot size : " << msg.robot_info.size() << std::endl;
-    for(std::size_t i=0; i<msg.robot_info.size(); i++){
-      std::cout <<"nego notice robot id : " << msg.robot_info[i].robotid << std::endl;
-    }
+    // std::cout <<"msg robot size : " << msg.robot_info.size() << std::endl;
+    // for(std::size_t i=0; i<msg.robot_info.size(); i++){
+    //   std::cout <<"nego notice robot id : " << msg.robot_info[i].robotid << std::endl;
+    // }
     #endif
     bool relevant = false;
     for (const auto p : msg.participants)

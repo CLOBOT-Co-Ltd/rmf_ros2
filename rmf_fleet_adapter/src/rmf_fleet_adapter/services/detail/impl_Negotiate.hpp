@@ -192,7 +192,6 @@ void Negotiate::operator()(const Subscriber& s)
   {
     for (const auto& validator : validators)
     {
-      std::cout << "[impl_Negotiate.hpp] make job: " << _target_robot_id << std::endl;
       auto job = std::make_shared<jobs::Planning>(
         _target_robot_id, _target_start, _target_end, _target_path,
         _enemy_robot_id, _enemy_start, _enemy_startidx, _enemy_end, _enemy_path,

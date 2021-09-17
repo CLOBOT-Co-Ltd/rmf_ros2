@@ -93,6 +93,23 @@ public:
     _cv->notify_all();
   }
 
+  #ifdef CLOBER_RMF
+  void clober_submit(
+    std::vector<rmf_traffic::Route> itinerary,
+    std::function<UpdateVersion()> approval_callback,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path) const final
+  {
+  }
+  #endif
+
   void reject(const Alternatives& alternatives) const final
   {
     const auto lock = _lock();

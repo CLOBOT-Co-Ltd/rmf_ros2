@@ -27,6 +27,7 @@ namespace services {
 template<typename Subscriber>
 void Negotiate::operator()(const Subscriber& s)
 {
+  #ifndef CLOBER_RMF
   s.add([n = weak_from_this()]()
     {
       // This service will be discarded if it is unsubscribed from
@@ -168,6 +169,180 @@ void Negotiate::operator()(const Subscriber& s)
 
       return false;
     };
+  #else
+  s.add([n = weak_from_this()]()
+    {
+      // This service will be discarded if it is unsubscribed from
+      if (const auto negotiate = n.lock())
+        negotiate->discard();
+    });
+
+  auto validators =
+    rmf_traffic::agv::NegotiatingRouteValidator::Generator(_viewer).all();
+
+  _queued_jobs.reserve(validators.size() * _goals.size());
+
+  auto interrupter = [
+    service_interrupted = _interrupted, viewer = _viewer]() -> bool
+    {
+      return *service_interrupted || viewer->defunct();
+    };
+
+  for (const auto& goal : _goals)
+  {
+    for (const auto& validator : validators)
+    {
+      std::cout << "[impl_Negotiate.hpp] make job: " << _target_robot_id << std::endl;
+      auto job = std::make_shared<jobs::Planning>(
+        _target_robot_id, _target_start, _target_end, _target_path,
+        _enemy_robot_id, _enemy_start, _enemy_startidx, _enemy_end, _enemy_path,
+        _planner, _starts, goal,
+        rmf_traffic::agv::Plan::Options(validator)
+        .interrupter(interrupter));
+
+      _evaluator.initialize(job->progress());
+
+      _queued_jobs.emplace_back(std::move(job));
+    }
+  }
+  const double initial_max_cost =
+    _evaluator.best_estimate.cost * _evaluator.estimate_leeway;
+  const std::size_t N_jobs = _queued_jobs.size();
+
+  for (const auto& job : _queued_jobs)
+    job->progress().options().maximum_cost_estimate(initial_max_cost);
+
+  std::string target_robot_id = _target_robot_id;
+  std::string target_start = _target_start;
+  std::string target_end = _target_end;
+  std::vector<std::string> target_path = _target_path;
+  std::string enemy_robot_id = _enemy_robot_id;
+  std::string enemy_start = _enemy_start;
+  std::size_t enemy_startidx = _enemy_startidx;
+  std::string enemy_end = _enemy_end;
+  std::vector<std::string> enemy_path = _enemy_path;
+
+  // It's technically okay for us to capture `this` by value here because this
+  // lambda will only be used in the callback of _search_sub below, which will
+  // capture `this` instance by weak_ptr and lock that weak_ptr before
+  // attempting to call the check_if_finished lambda.
+  auto check_if_finished = [this, s, N_jobs, target_robot_id, target_start, target_end, target_path,
+    enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path]
+    () -> bool
+    {
+      if (_finished)
+        return true;
+
+      if (_evaluator.finished_count >= N_jobs || *_interrupted)
+      {
+        if (_evaluator.best_result.progress
+          && _evaluator.best_result.progress->success())
+        {
+          _finished = true;
+          // This means we found a successful plan to submit to the negotiation.
+          s.on_next(
+            Result{
+              shared_from_this(),
+              [r = *_evaluator.best_result.progress,
+              initial_itinerary = std::move(_initial_itinerary),
+              approval = std::move(_approval),
+              responder = _responder,
+              target_robot_id = target_robot_id,
+              target_start = target_start,
+              target_end = target_end,
+              target_path = target_path,
+              enemy_robot_id = enemy_robot_id,
+              enemy_start = enemy_start,
+              enemy_startidx = enemy_startidx,
+              enemy_end = enemy_end,
+              enemy_path = enemy_path]()
+              {
+                std::vector<rmf_traffic::Route> final_itinerary;
+                final_itinerary.reserve(
+                  initial_itinerary.size() + r->get_itinerary().size());
+
+                for (const auto& it : {initial_itinerary, r->get_itinerary()})
+                {
+                  for (const auto& route : it)
+                  {
+                    if (route.trajectory().size() > 1)
+                      final_itinerary.push_back(route);
+                  }
+                }
+
+                responder->clober_submit(
+                  std::move(final_itinerary),
+                  [plan = *r, approval = std::move(approval),
+                  target_robot_id = target_robot_id,
+                  target_start = target_start,
+                  target_end = target_end,
+                  target_path = target_path,
+                  enemy_robot_id = enemy_robot_id,
+                  enemy_start = enemy_start,
+                  enemy_startidx = enemy_startidx,
+                  enemy_end = enemy_end,
+                  enemy_path = enemy_path]()
+                  -> UpdateVersion
+                  {
+                    if (approval)
+                      return approval(plan);
+
+                    return rmf_utils::nullopt;
+                  },
+                  target_robot_id, target_start, target_end, target_path,
+                  enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path);
+              }
+            });
+          s.on_completed();
+          this->interrupt();
+          return true;
+        }
+        else if (_alternatives && !_alternatives->empty())
+        {
+          _finished = true;
+          // This means we could not find a successful plan, but we have some
+          // alternatives to offer the parent in the negotiation.
+          s.on_next(
+            Result{
+              shared_from_this(),
+              [alts = *_alternatives, responder = _responder]()
+              {
+                responder->reject(alts);
+              }
+            });
+
+          s.on_completed();
+          this->interrupt();
+          return true;
+        }
+        else if (!_attempting_rollout)
+        {
+          _finished = true;
+          // This means we could not find any plan or any alternatives to offer
+          // the parent, so all we can do is forfeit.
+          s.on_next(
+            Result{
+              shared_from_this(),
+              [n = shared_from_this()]()
+              {
+                std::vector<rmf_traffic::schedule::ParticipantId> blockers(
+                  n->_blockers.begin(), n->_blockers.end());
+                n->_responder->forfeit(std::move(blockers));
+              }
+            });
+
+          s.on_completed();
+          this->interrupt();
+          return true;
+        }
+
+        // If we land here, that means a rollout is still being calculated, and
+        // we will consider the service finished when that rollout is ready
+      }
+
+      return false;
+    };
+  #endif
 
   _search_sub = rmf_rxcpp::make_job_from_action_list(_queued_jobs)
     .observe_on(rxcpp::observe_on_event_loop())

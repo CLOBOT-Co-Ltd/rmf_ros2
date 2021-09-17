@@ -138,6 +138,66 @@ public:
       }
     }
 
+    #ifdef CLOBER_RMF
+    void clober_submit(
+      std::vector<rmf_traffic::Route> itinerary,
+      std::function<UpdateVersion()> approval_callback,
+      std::string target_robot_id,
+      std::string target_start,
+      std::string target_end,
+      std::vector<std::string> target_path,
+      std::string enemy_robot_id,
+      std::string enemy_start,
+      std::size_t enemy_startidx,
+      std::string enemy_end,
+      std::vector<std::string> enemy_path) const final
+    {
+      responded = true;
+      if (table->defunct())
+        return;
+
+      if (table->submit(itinerary, table_version+1))
+      {
+        impl->approvals[conflict_version][table] = {
+          table->sequence(),
+          std::move(approval_callback)
+        };
+
+        impl->publish_proposal(conflict_version, *table);
+
+        if (impl->worker)
+        {
+          for (const auto& c : table->children())
+          {
+            const auto n_it = impl->negotiators->find(c->participant());
+            if (n_it == impl->negotiators->end())
+              continue;
+
+            impl->worker->schedule(
+              [viewer = c->viewer(),
+              negotiator = n_it->second.get(),
+              responder = make(impl, conflict_version, c),
+              _target_robot_id = target_robot_id,
+              _target_start = target_start,
+              _target_end = target_end,
+              _target_path = target_path,
+              _enemy_robot_id = enemy_robot_id,
+              _enemy_start = enemy_start,
+              _enemy_startidx = enemy_startidx,
+              _enemy_end = enemy_end,
+              _enemy_path = enemy_path]
+              ()
+              {
+                negotiator->clober_respond(viewer, responder,
+                  _target_robot_id, _target_start, _target_end, _target_path,
+                  _enemy_robot_id, _enemy_start, _enemy_startidx, _enemy_end, _enemy_path);
+              });
+          }
+        }
+      }
+    }
+    #endif
+
     void reject(const Alternatives& alternatives) const final
     {
       responded = true;
@@ -1106,6 +1166,7 @@ public:
     NegotiatorPtr negotiator,
     std::function<void()> failure_cb)
   {
+    std::cout << "register_negotiator 1 " << std::endl;
     const auto insertion = negotiators->insert(
       std::make_pair(for_participant, std::move(negotiator)));
 
@@ -1238,6 +1299,7 @@ std::shared_ptr<void> Negotiation::register_negotiator(
   rmf_traffic::schedule::ParticipantId for_participant,
   std::unique_ptr<rmf_traffic::schedule::Negotiator> negotiator)
 {
+  std::cout << "register_negotiator 2" << std::endl;
   return _pimpl->register_negotiator(
     for_participant, std::move(negotiator), nullptr);
 }
@@ -1248,6 +1310,7 @@ std::shared_ptr<void> Negotiation::register_negotiator(
   std::unique_ptr<rmf_traffic::schedule::Negotiator> negotiator,
   std::function<void()> on_negotiation_failure)
 {
+  std::cout << "register_negotiator 3 " << std::endl;
   return _pimpl->register_negotiator(
     for_participant, std::move(negotiator), std::move(on_negotiation_failure));
 }
@@ -1259,16 +1322,31 @@ public:
 
   using RespondFn = std::function<void(TableViewerPtr, ResponderPtr)>;
 
+  using CloberRespondFn = std::function<void(TableViewerPtr, ResponderPtr,
+    std::string, std::string, std::string, std::vector<std::string>,
+    std::string, std::string, std::size_t, std::string, std::vector<std::string>)>;
+
   LambdaNegotiator(RespondFn respond)
   : _respond(std::move(respond))
   {
+    std::cout << "LambdaNegotiator respond" << std::endl;
     // Do nothing
   }
+
+  #ifdef CLOBER_RMF
+  LambdaNegotiator(CloberRespondFn clober_respond)
+  : _clober_respond(std::move(clober_respond))
+  {
+    std::cout << "LambdaNegotiator clober_respond" << std::endl;
+    // Do nothing
+  }
+  #endif
 
   void respond(
     const TableViewerPtr& table_viewer,
     const ResponderPtr& responder) final
   {
+    std::cout << "[Negotiation.cpp] LambdaNegotiator make respond" << std::endl;
     _respond(std::move(table_viewer), std::move(responder));
   }
 
@@ -1286,12 +1364,17 @@ public:
     std::string enemy_end,
     std::vector<std::string> enemy_path)
   {
-    
+    _clober_respond(std::move(table_viewer), std::move(responder),
+    target_robot_id, target_start, target_end, target_path,
+    enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path);
   }
   #endif
 
 private:
   RespondFn _respond;
+  #ifdef CLOBER_RMF
+  CloberRespondFn _clober_respond;
+  #endif
 };
 
 //==============================================================================
@@ -1301,11 +1384,28 @@ std::shared_ptr<void> Negotiation::register_negotiator(
   std::function<void(TableViewPtr, ResponderPtr)> respond,
   std::function<void()> on_negotiation_failure)
 {
+  std::cout << "register_negotiator 4 " << std::endl;
   return register_negotiator(
     for_participant,
     std::make_unique<LambdaNegotiator>(std::move(respond)),
     std::move(on_negotiation_failure));
 }
+
+#ifdef CLOBER_RMF
+std::shared_ptr<void> Negotiation::register_negotiator(
+  rmf_traffic::schedule::ParticipantId for_participant,
+  std::function<void(TableViewPtr, ResponderPtr,
+    std::string, std::string, std::string, std::vector<std::string>,
+    std::string, std::string, std::size_t, std::string, std::vector<std::string>)> clober_respond,
+  std::function<void()> on_negotiation_failure)
+{
+  std::cout << "register_negotiator 5" << std::endl;
+  return register_negotiator(
+    for_participant,
+    std::make_unique<LambdaNegotiator>(std::move(clober_respond)),
+    std::move(on_negotiation_failure));
+}
+#endif
 // #endif
 
 } // namespace schedule

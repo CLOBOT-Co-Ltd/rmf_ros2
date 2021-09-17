@@ -59,7 +59,7 @@ Auctioneer::Implementation::Implementation(
         this->check_bidding_process();
       });
   #else
-  timer = node->create_wall_timer(std::chrono::milliseconds(10000), [&]()
+  timer = node->create_wall_timer(std::chrono::milliseconds(1000), [&]()
       {
         this->check_bidding_process();
       });
@@ -98,37 +98,22 @@ void Auctioneer::Implementation::receive_proposal(
 // determine the winner within a bidding task instance
 void Auctioneer::Implementation::check_bidding_process()
 { 
-  #ifdef CLOBER_RMF
-  std::cout << "********************check_bidding_process()" << std::endl;
-  #endif
   if (queue_bidding_tasks.size() == 0)
     return;
     
-  #ifdef CLOBER_RMF
-  std::cout << "********************queue_bidding_tasks.front()" << std::endl;
-  #endif
   // Executing the task at the front queue
   auto front_task = queue_bidding_tasks.front();
 
   if (bidding_in_proccess)
   {
-    #ifdef CLOBER_RMF
-    std::cout << "********************bidding_in_process" << std::endl;
-    #endif
     if (determine_winner(front_task))
     {
-      #ifdef CLOBER_RMF
-      std::cout << "********************determin_winner" << std::endl;
-      #endif
       queue_bidding_tasks.pop();
       bidding_in_proccess = false;
     }
   }
   else
   {
-    #ifdef CLOBER_RMF
-    std::cout << " !!!!!!!!!!!!!!!!!!11111 bid notice pub" << std::endl;
-    #endif
     RCLCPP_DEBUG(node->get_logger(), " - Start new bidding task: %s",
       front_task.bid_notice.task_profile.task_id.c_str());
     queue_bidding_tasks.front().start_time = node->now();

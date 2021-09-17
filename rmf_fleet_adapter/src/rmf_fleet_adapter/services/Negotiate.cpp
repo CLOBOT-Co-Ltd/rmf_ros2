@@ -42,6 +42,48 @@ Negotiate::Negotiate(
   // Do nothing
 }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+Negotiate::Negotiate(
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path,
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+  rmf_traffic::agv::Plan::StartSet starts,
+  std::vector<rmf_traffic::agv::Plan::Goal> goals,
+  rmf_traffic::schedule::Negotiator::TableViewerPtr viewer,
+  rmf_traffic::schedule::Negotiator::ResponderPtr responder,
+  ApprovalCallback approval,
+  const ProgressEvaluator evaluator,
+  std::vector<rmf_traffic::Route> initial_itinerary)
+: _planner(std::move(planner)),
+  _starts(std::move(starts)),
+  _goals(std::move(goals)),
+  _viewer(std::move(viewer)),
+  _responder(std::move(responder)),
+  _approval(std::move(approval)),
+  _initial_itinerary(std::move(initial_itinerary)),
+  _evaluator(evaluator),
+  _target_robot_id(target_robot_id),
+  _target_start(target_start),
+  _target_end(target_end),
+  _target_path(target_path),
+  _enemy_robot_id(enemy_robot_id),
+  _enemy_start(enemy_start),
+  _enemy_startidx(enemy_startidx),
+  _enemy_end(enemy_end),
+  _enemy_path(enemy_path)
+{
+  // Do nothing
+}
+#endif
+
 //==============================================================================
 std::shared_ptr<Negotiate> Negotiate::path(
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
@@ -63,6 +105,48 @@ std::shared_ptr<Negotiate> Negotiate::path(
     evaluator,
     std::move(initial_itinerary));
 }
+
+#ifdef CLOBER_RMF
+//==============================================================================
+std::shared_ptr<Negotiate> Negotiate::clober_path(
+  std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+  rmf_traffic::agv::Plan::StartSet starts,
+  rmf_traffic::agv::Plan::Goal goal,
+  rmf_traffic::schedule::Negotiator::TableViewerPtr viewer,
+  rmf_traffic::schedule::Negotiator::ResponderPtr responder,
+  ApprovalCallback approval,
+  const ProgressEvaluator evaluator,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path,
+  std::vector<rmf_traffic::Route> initial_itinerary)
+{
+  return std::make_shared<Negotiate>(
+    target_robot_id,
+    target_start,
+    target_end,
+    target_path,
+    enemy_robot_id,
+    enemy_start,
+    enemy_startidx,
+    enemy_end,
+    enemy_path,
+    std::move(planner),
+    std::move(starts),
+    std::vector<rmf_traffic::agv::Plan::Goal>({std::move(goal)}),
+    std::move(viewer),
+    std::move(responder),
+    std::move(approval),
+    evaluator,
+    std::move(initial_itinerary));
+}
+#endif
 
 //==============================================================================
 std::shared_ptr<Negotiate> Negotiate::emergency_pullover(

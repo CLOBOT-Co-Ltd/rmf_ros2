@@ -46,6 +46,27 @@ public:
     ProgressEvaluator evaluator,
     std::vector<rmf_traffic::Route> initial_itinerary = {});
 
+  #ifdef CLOBER_RMF
+  Negotiate(
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+    rmf_traffic::agv::Plan::StartSet starts,
+    std::vector<rmf_traffic::agv::Plan::Goal> goals,
+    rmf_traffic::schedule::Negotiator::TableViewerPtr viewer,
+    rmf_traffic::schedule::Negotiator::ResponderPtr responder,
+    ApprovalCallback approval,
+    ProgressEvaluator evaluator,
+    std::vector<rmf_traffic::Route> initial_itinerary);
+  #endif
+
   static std::shared_ptr<Negotiate> path(
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::agv::Plan::StartSet starts,
@@ -55,6 +76,27 @@ public:
     ApprovalCallback approval,
     ProgressEvaluator evaluator,
     std::vector<rmf_traffic::Route> initial_itinerary = {});
+
+  #ifdef CLOBER_RMF
+  static std::shared_ptr<Negotiate> clober_path(
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+    rmf_traffic::agv::Plan::StartSet starts,
+    rmf_traffic::agv::Plan::Goal goal,
+    rmf_traffic::schedule::Negotiator::TableViewerPtr viewer,
+    rmf_traffic::schedule::Negotiator::ResponderPtr responder,
+    ApprovalCallback approval,
+    const ProgressEvaluator evaluator,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path,
+    std::vector<rmf_traffic::Route> initial_itinerary = {});
+  #endif
 
   static std::shared_ptr<Negotiate> emergency_pullover(
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
@@ -94,6 +136,18 @@ private:
   rmf_traffic::schedule::Negotiator::ResponderPtr _responder;
   ApprovalCallback _approval;
   std::vector<rmf_traffic::Route> _initial_itinerary;
+  
+  #ifdef CLOBER_RMF
+  std::string _target_robot_id;
+  std::string _target_start;
+  std::string _target_end;
+  std::vector<std::string> _target_path;
+  std::string _enemy_robot_id;
+  std::string _enemy_start;
+  std::size_t _enemy_startidx;
+  std::string _enemy_end;
+  std::vector<std::string> _enemy_path;
+  #endif
 
   using JobPtr = std::shared_ptr<jobs::Planning>;
   struct CompareJobs

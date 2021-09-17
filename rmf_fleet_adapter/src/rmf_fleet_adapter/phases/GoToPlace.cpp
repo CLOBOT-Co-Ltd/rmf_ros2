@@ -101,38 +101,15 @@ void GoToPlace::Active::clober_respond(
   std::string enemy_end,
   std::vector<std::string> enemy_path)
 {
-  // std::cout <<"GoToPlace::Active::clober_respond id : " << target_robot_id <<std::endl;
-
-  // todo
-  // 1. excute plan 을 통해 움직이기
-  // 2. negotiation 결과 반환 적용
-
-  // if (_subtasks)
-  // {
-  //   if (dynamic_cast<DockRobot::ActivePhase*>(_subtasks->current_phase().get()))
-  //   {
-  //     rmf_traffic::schedule::StubbornNegotiator(_context->itinerary())
-  //     .respond(table_viewer, responder);
-  //     return;
-  //   }
-  // }
-
-
   auto approval_cb = [w = weak_from_this()](
     const rmf_traffic::agv::Plan& plan)
     -> rmf_utils::optional<rmf_traffic::schedule::ItineraryVersion>
     {
       if (auto active = w.lock())
       {
-        // std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출" << std::endl;
         active->execute_plan(plan);
-
-        // std::cout <<"GoToPlace::Active::clober_respond execute_plan 결과" << std::endl;
-
         return active->_context->itinerary().version();
       }
-      // std::cout <<"GoToPlace::Active::clober_respond execute_plan 호출하지 않음" << std::endl;
-
       return rmf_utils::nullopt;
     };
 
@@ -144,105 +121,93 @@ void GoToPlace::Active::clober_respond(
     evaluator.compliant_leeway_base *= s[s.size()-2].version + 1;
     evaluator.max_cost_threshold = 90.0 + 30.0*s[s.size()-2].version;
   }
-
   std::shared_ptr<services::Negotiate> negotiate;
   if (_emergency_active)
   {
-    negotiate = services::Negotiate::emergency_pullover(
-      _context->planner(), _context->location(), table_viewer, responder,
-      std::move(approval_cb), evaluator);
+    // negotiate = services::Negotiate::emergency_pullover(
+    //   _context->planner(), _context->location(), table_viewer, responder,
+    //   std::move(approval_cb), evaluator);
   }
   else
   {
-    // std::cout <<"GoToPlace::Active::clober_respond negotiate 생성" << std::endl;
+    if(_context->name() == target_robot_id) {
+      std::cout << "context = target" << std::endl;
+      std::cout <<"GoToPlace::Active::clober_respond negotiate 생성: " << target_robot_id << std::endl;
 
-    negotiate = services::Negotiate::path(
-      _context->planner(), _context->location(), _goal, table_viewer,
-      responder, std::move(approval_cb), evaluator);
+      negotiate = services::Negotiate::clober_path(
+        _context->planner(), _context->location(), _goal, table_viewer,
+        responder, std::move(approval_cb), evaluator,
+        target_robot_id, target_start, target_end, target_path,
+        enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path);
+    } else {
+      std::string t_id = enemy_robot_id;
+      std::string t_start = enemy_start;
+      std::string t_end = enemy_end;
+      std::vector<std::string> t_path = enemy_path;
+      std::string e_id = target_robot_id;
+      std::string e_start = target_start;
+      std::size_t e_startidx = 0;
+      std::string e_end = target_end;
+      std::vector<std::string> e_path = target_path;
+
+      std::cout << "context = enemy" << std::endl;
+      std::cout <<"GoToPlace::Active::clober_respond negotiate 생성: " << enemy_robot_id << std::endl;
+
+      negotiate = services::Negotiate::clober_path(
+        _context->planner(), _context->location(), _goal, table_viewer,
+        responder, std::move(approval_cb), evaluator,
+        t_id, t_start, t_end, t_path,
+        e_id, e_start, e_startidx, e_end, e_path);
+    }
   }
 
-    // std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성" << std::endl;
+  // #ifdef CLOBER_RMF
+  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성" << std::endl;
+  // #endif
+  auto negotiate_sub =
+    rmf_rxcpp::make_job<services::Negotiate::Result>(negotiate)
+    .observe_on(rxcpp::identity_same_worker(_context->worker()))
+    .subscribe(
+    [w = weak_from_this()](const auto& result)
+    {
+      if (auto phase = w.lock())
+      {
+        std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 1 (if) " << std::endl;
+        // result.clober_respond = clober_respond;
+        result.respond();
+        std::cout << "result.respond()" << std::endl;
+        phase->_negotiate_services.erase(result.service);
+      }
+      else
+      {
+        std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 (else)" << std::endl;
+        // We need to make sure we respond in some way so that we don't risk
+        // making a negotiation hang forever. If this task is dead, then we should
+        // at least respond by forfeiting.
+        const auto service = result.service;
+        const auto responder = service->responder();
+        responder->forfeit({});
+      }
+    });
 
-    // std::cout <<"GoToPlace::Active::clober_respond test clober_plan 호출" << std::endl;
+  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 2" << std::endl;
+  using namespace std::chrono_literals;
+  const auto wait_duration = 2s + table_viewer->sequence().back().version * 10s;
+  auto negotiate_timer = _context->node()->try_create_wall_timer(
+    wait_duration,
+    [s = negotiate->weak_from_this()]
+    {
+      if (const auto service = s.lock())
+        service->interrupt();
+    });
 
-  std::cout << "conext name: " << _context->name() << std::endl;
-  // const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
-  //  target_robot_id, target_start,
-  //           target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path);
-
-  if(_context->name() == target_robot_id)
-  {
-    const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
-      target_robot_id, target_start, target_end, target_path,
-      enemy_robot_id, enemy_start, 0,  enemy_end, enemy_path);
-    
-    execute_plan(*std::move(test_result));
-  } else {
-    std::string target_robot_id_ = enemy_robot_id;
-    std::string target_start_ = enemy_start;
-    std::string target_end_ = enemy_end;
-    std::vector<std::string> target_path_ = enemy_path; 
-    std::string enemy_robot_id_ = target_robot_id;
-    std::string enemy_start_ = target_start;
-    std::size_t enemy_startidx_ = 0;
-    std::string enemy_end_ = target_end;
-    std::vector<std::string> enemy_path_ = target_path;
-
-    const auto test_result = _context->planner()->clober_plan(_context->location(), _goal, 
-      target_robot_id_, target_start_, target_end_, target_path_,
-      enemy_robot_id_, enemy_start_, enemy_startidx_,  enemy_end_, enemy_path_);
-    
-    execute_plan(*std::move(test_result));
-  }
-
-  // std::cout <<"GoToPlace::Active::clober_respond test clober_plan 결과" << std::endl;
-    
-  // 아래 함수가 plan 호출하는 부분임
-  // auto negotiate_sub =
-  //   rmf_rxcpp::make_job<services::Negotiate::Result>(negotiate)
-  //   .observe_on(rxcpp::identity_same_worker(_context->worker()))
-  //   .subscribe(
-  //   [w = weak_from_this()](const auto& result)
-  //   {
-  //     if (auto phase = w.lock())
-  //     {
-  //       std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 1 (if) " << std::endl;
-  //       result.respond();
-  //       phase->_negotiate_services.erase(result.service);
-  //     }
-  //     else
-  //     {
-
-  //       std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 (else)" << std::endl;
-
-  //       // We need to make sure we respond in some way so that we don't risk
-  //       // making a negotiation hang forever. If this task is dead, then we should
-  //       // at least respond by forfeiting.
-  //       const auto service = result.service;
-  //       const auto responder = service->responder();
-  //       responder->forfeit({});
-  //     }
-  //   });
-
-  // std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 2" << std::endl;
-
-  // using namespace std::chrono_literals;
-  // const auto wait_duration = 2s + table_viewer->sequence().back().version * 10s;
-  // auto negotiate_timer = _context->node()->try_create_wall_timer(
-  //   wait_duration,
-  //   [s = negotiate->weak_from_this()]
-  //   {
-  //     if (const auto service = s.lock())
-  //       service->interrupt();
-  //   });
-
-  // _negotiate_services[negotiate] =
-  //   NegotiateManagers{
-  //   std::move(negotiate_sub),
-  //   std::move(negotiate_timer)
-  // };
-
-  // std::cout <<"GoToPlace::Active::clober_respond negotiate_sub 생성 3" << std::endl;
+  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 3" << std::endl;
+  _negotiate_services[negotiate] =
+    NegotiateManagers{
+    std::move(negotiate_sub),
+    std::move(negotiate_timer)
+  };
+  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 4" << std::endl;
 }
 #endif
 
@@ -261,28 +226,16 @@ void GoToPlace::Active::respond(
     }
   }
 
-  #ifdef CLOBER_RMF
-  // std::cout << "GoToPlace::Active::respond" << std::endl;
-  #endif
   auto approval_cb = [w = weak_from_this()](
     const rmf_traffic::agv::Plan& plan)
     -> rmf_utils::optional<rmf_traffic::schedule::ItineraryVersion>
     {
       if (auto active = w.lock())
       {
-        #ifdef CLOBER_RMF
-        // std::cout <<"GoToPlace::Active::respond execute_plan 호출" << std::endl;
-        #endif
         active->execute_plan(plan);
-        #ifdef CLOBER_RMF
-        // std::cout <<"GoToPlace::Active::respond execute_plan 결과" << std::endl;
-        #endif
         return active->_context->itinerary().version();
       }
 
-      #ifdef CLOBER_RMF
-      // std::cout <<"GoToPlace::Active::respond execute_plan 호출하지 않음" << std::endl;
-      #endif
       return rmf_utils::nullopt;
     };
 
@@ -304,17 +257,11 @@ void GoToPlace::Active::respond(
   }
   else
   {
-    #ifdef CLOBER_RMF
-    std::cout <<"GoToPlace::Active::respond negotiate 생성" << std::endl;
-    #endif
     negotiate = services::Negotiate::path(
       _context->planner(), _context->location(), _goal, table_viewer,
       responder, std::move(approval_cb), evaluator);
   }
 
-  #ifdef CLOBER_RMF
-  std::cout <<"GoToPlace::Active::respond negotiate_sub 생성" << std::endl;
-  #endif
   auto negotiate_sub =
     rmf_rxcpp::make_job<services::Negotiate::Result>(negotiate)
     .observe_on(rxcpp::identity_same_worker(_context->worker()))
@@ -323,30 +270,20 @@ void GoToPlace::Active::respond(
     {
       if (auto phase = w.lock())
       {
-        #ifdef CLOBER_RMF
-        std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 1 (if) " << std::endl;
-        #endif
         result.respond();
         phase->_negotiate_services.erase(result.service);
       }
       else
       {
-        #ifdef CLOBER_RMF
-        std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 (else)" << std::endl;
-        #endif
         // We need to make sure we respond in some way so that we don't risk
         // making a negotiation hang forever. If this task is dead, then we should
         // at least respond by forfeiting.
         const auto service = result.service;
         const auto responder = service->responder();
-        // std::cout << "Check Point" << std::endl;
         responder->forfeit({});
       }
     });
 
-  #ifdef CLOBER_RMF
-  // std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 2" << std::endl;
-  #endif
   using namespace std::chrono_literals;
   const auto wait_duration = 2s + table_viewer->sequence().back().version * 10s;
   auto negotiate_timer = _context->node()->try_create_wall_timer(
@@ -362,9 +299,6 @@ void GoToPlace::Active::respond(
     std::move(negotiate_sub),
     std::move(negotiate_timer)
   };
-  #ifdef CLOBER_RMF
-  // std::cout <<"GoToPlace::Active::respond negotiate_sub 생성 3" << std::endl;
-  #endif
 }
 
 //==============================================================================

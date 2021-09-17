@@ -41,7 +41,24 @@ public:
     const rmf_traffic::agv::Plan::StartSet& starts,
     rmf_traffic::agv::Plan::Goal goal,
     rmf_traffic::agv::Plan::Options options);
-
+    
+  #ifdef CLOBER_RMF
+  Planning(
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path,
+    std::shared_ptr<const rmf_traffic::agv::Planner> planner,
+    const rmf_traffic::agv::Plan::StartSet& starts,
+    rmf_traffic::agv::Plan::Goal goal,
+    rmf_traffic::agv::Plan::Options options);
+  #endif
+  
   Planning(rmf_traffic::agv::Planner::Result _setup);
 
   template<typename Subscriber, typename Worker>

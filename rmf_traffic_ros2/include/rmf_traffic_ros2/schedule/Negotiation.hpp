@@ -163,6 +163,15 @@ public:
     std::function<void(TableViewPtr view, ResponderPtr responder)> respond,
     std::function<void()> on_negotiation_failure = nullptr);
 
+  #ifdef CLOBER_RMF
+  std::shared_ptr<void> register_negotiator(
+    rmf_traffic::schedule::ParticipantId for_participant,
+    std::function<void(TableViewPtr view, ResponderPtr responder,
+      std::string, std::string, std::string, std::vector<std::string>,
+      std::string, std::string, std::size_t, std::string, std::vector<std::string>)> clober_respond,
+    std::function<void()> on_negotiation_failure = nullptr);
+  #endif
+  
   class Implementation;
 private:
   rmf_utils::unique_impl_ptr<Implementation> _pimpl;

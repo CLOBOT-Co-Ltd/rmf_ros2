@@ -54,6 +54,7 @@ Negotiate::Negotiate(
   std::size_t enemy_startidx,
   std::string enemy_end,
   std::vector<std::string> enemy_path,
+  bool is_MIP,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   rmf_traffic::agv::Plan::StartSet starts,
   std::vector<rmf_traffic::agv::Plan::Goal> goals,
@@ -78,7 +79,8 @@ Negotiate::Negotiate(
   _enemy_start(enemy_start),
   _enemy_startidx(enemy_startidx),
   _enemy_end(enemy_end),
-  _enemy_path(enemy_path)
+  _enemy_path(enemy_path),
+  _is_MIP(is_MIP)
 {
   // Do nothing
 }
@@ -125,6 +127,7 @@ std::shared_ptr<Negotiate> Negotiate::clober_path(
   std::size_t enemy_startidx,
   std::string enemy_end,
   std::vector<std::string> enemy_path,
+  bool is_MIP,
   std::vector<rmf_traffic::Route> initial_itinerary)
 {
   return std::make_shared<Negotiate>(
@@ -137,6 +140,7 @@ std::shared_ptr<Negotiate> Negotiate::clober_path(
     enemy_startidx,
     enemy_end,
     enemy_path,
+    is_MIP,
     std::move(planner),
     std::move(starts),
     std::vector<rmf_traffic::agv::Plan::Goal>({std::move(goal)}),

@@ -194,7 +194,7 @@ void Negotiate::operator()(const Subscriber& s)
     {
       auto job = std::make_shared<jobs::Planning>(
         _target_robot_id, _target_start, _target_end, _target_path,
-        _enemy_robot_id, _enemy_start, _enemy_startidx, _enemy_end, _enemy_path,
+        _enemy_robot_id, _enemy_start, _enemy_startidx, _enemy_end, _enemy_path, _is_MIP,
         _planner, _starts, goal,
         rmf_traffic::agv::Plan::Options(validator)
         .interrupter(interrupter));

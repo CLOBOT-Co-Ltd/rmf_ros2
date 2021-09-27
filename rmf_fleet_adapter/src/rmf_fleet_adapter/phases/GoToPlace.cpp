@@ -135,11 +135,16 @@ void GoToPlace::Active::clober_respond(
         _context->planner(), _context->location(), _goal, table_viewer,
         responder, std::move(approval_cb), evaluator,
         target_robot_id, target_start, target_end, target_path,
-        enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path);
+        enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path, true);
     } else {
-      negotiate = services::Negotiate::path(
+      // negotiate = services::Negotiate::path(
+      //   _context->planner(), _context->location(), _goal, table_viewer,
+      //   responder, std::move(approval_cb), evaluator);
+      negotiate = services::Negotiate::clober_path(
         _context->planner(), _context->location(), _goal, table_viewer,
-        responder, std::move(approval_cb), evaluator);
+        responder, std::move(approval_cb), evaluator,
+        target_robot_id, target_start, target_end, target_path,
+        enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path, false);
     }
   }
 

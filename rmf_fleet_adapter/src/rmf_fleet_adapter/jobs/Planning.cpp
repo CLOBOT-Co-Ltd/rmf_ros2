@@ -43,13 +43,14 @@ Planning::Planning(
   std::size_t enemy_startidx,
   std::string enemy_end,
   std::vector<std::string> enemy_path,
+  bool is_MIP,
   std::shared_ptr<const rmf_traffic::agv::Planner> planner,
   const rmf_traffic::agv::Plan::StartSet& starts,
   rmf_traffic::agv::Plan::Goal goal,
   rmf_traffic::agv::Plan::Options options)
 : _current_result(planner->clober_setup(starts, std::move(goal), std::move(options),
     target_robot_id, target_start, target_end, target_path,
-    enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path))
+    enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path, is_MIP))
 {
   _current_result->options().saturation_limit(10000);
 }

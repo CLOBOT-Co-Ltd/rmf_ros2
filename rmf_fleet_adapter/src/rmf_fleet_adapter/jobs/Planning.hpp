@@ -53,6 +53,7 @@ public:
     std::size_t enemy_startidx,
     std::string enemy_end,
     std::vector<std::string> enemy_path,
+    bool is_MIP,
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     const rmf_traffic::agv::Plan::StartSet& starts,
     rmf_traffic::agv::Plan::Goal goal,

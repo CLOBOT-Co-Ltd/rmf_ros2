@@ -57,6 +57,7 @@ public:
     std::size_t enemy_startidx,
     std::string enemy_end,
     std::vector<std::string> enemy_path,
+    bool is_MIP,
     std::shared_ptr<const rmf_traffic::agv::Planner> planner,
     rmf_traffic::agv::Plan::StartSet starts,
     std::vector<rmf_traffic::agv::Plan::Goal> goals,
@@ -95,6 +96,7 @@ public:
     std::size_t enemy_startidx,
     std::string enemy_end,
     std::vector<std::string> enemy_path,
+    bool is_MIP,
     std::vector<rmf_traffic::Route> initial_itinerary = {});
   #endif
 
@@ -147,6 +149,7 @@ private:
   std::size_t _enemy_startidx;
   std::string _enemy_end;
   std::vector<std::string> _enemy_path;
+  bool _is_MIP;
   #endif
 
   using JobPtr = std::shared_ptr<jobs::Planning>;

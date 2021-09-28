@@ -208,8 +208,6 @@ std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> 
 
   for (const auto participant : participants)
   {
-    if(participant > 1) continue;
-
     const auto itinerary = *viewer.get_itinerary(participant);
     const auto description = viewer.get_participant(participant);
     if (!description)
@@ -223,15 +221,21 @@ std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> 
         continue;
       }
 
+      std::cout << "=========================================================" << std::endl;
+      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
+      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
+      
       if(!_fleet.count(description->name()) || !_fleet.count(vc->description.name()))
         continue;
 
+      std::cout << "----------------------------------------------------------" << std::endl;
+      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
+      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
+
       const auto a_it = _fleet.find(description->name());
-      _fleet.erase(a_it);
       Eigen::Vector2d pos_a = a_it->second;
 
       const auto b_it = _fleet.find(vc->description.name());
-      _fleet.erase(b_it);
       Eigen::Vector2d pos_b = b_it->second;
 
       for (const auto& route : itinerary)
@@ -1242,6 +1246,11 @@ void ScheduleNode::receive_fleet_state(const FleetState& msg)
 
     // std::cout << "[Node.cpp] update fleet state: " << fleet_name << " , " << x << " , " << y << std::endl;
     
+    if(_fleet.find(state.name) != _fleet.end()) {
+      const auto it = _fleet.find(state.name);
+      _fleet.erase(it);
+    }
+
     _fleet.insert({state.name, Eigen::Vector2d(x,y)});
     // _fleet.push_back(std::make_pair(fleet_name, Eigen::Vector2d(x,y)));
   }

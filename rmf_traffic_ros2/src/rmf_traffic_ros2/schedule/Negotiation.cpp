@@ -34,6 +34,10 @@
 
 #include <rclcpp/logging.hpp>
 
+#ifdef CLOBER_RMF
+#include <mutex>
+#endif
+
 namespace rmf_traffic_ros2 {
 namespace schedule {
 
@@ -326,6 +330,10 @@ public:
   using WeakNegotiatorMapPtr = std::weak_ptr<NegotiatorMap>;
   NegotiatorMapPtr negotiators;
 
+  #ifdef CLOBER_RMF
+  std::mutex respond_mutex;
+  #endif
+
   using FailureMap = std::unordered_map<ParticipantId, std::function<void()>>;
   using FailureMapPtr = std::shared_ptr<FailureMap>;
   using WeakFailureMapPtr = std::weak_ptr<FailureMap>;
@@ -547,7 +555,7 @@ public:
     std::vector<TablePtr> queue,
     const Notice& msg)
   {
-
+    std::unique_lock<std::mutex> lock(respond_mutex);
     while (!queue.empty())
     {
       const auto top = queue.back();

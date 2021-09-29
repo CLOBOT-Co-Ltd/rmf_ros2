@@ -220,17 +220,9 @@ std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> 
         // There's no need to check a participant against itself
         continue;
       }
-
-      std::cout << "=========================================================" << std::endl;
-      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
-      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
       
       if(!_fleet.count(description->name()) || !_fleet.count(vc->description.name()))
         continue;
-
-      std::cout << "----------------------------------------------------------" << std::endl;
-      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
-      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
 
       const auto a_it = _fleet.find(description->name());
       Eigen::Vector2d pos_a = a_it->second;
@@ -1339,8 +1331,8 @@ void ScheduleNode::receive_proposal(const ConflictProposal& msg)
   negotiation_room->check_cache({});
 
   // TODO(MXG): This should be removed once we have a negotiation visualizer
-  rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
-    negotiation);
+  // rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
+    // negotiation);
 
   if (negotiation.ready())
   {
@@ -1425,8 +1417,8 @@ void ScheduleNode::receive_rejection(const ConflictRejection& msg)
 
 
   // TODO(MXG): This should be removed once we have a negotiation visualizer
-  rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
-    negotiation);
+  // rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
+  //   negotiation);
 }
 
 //==============================================================================
@@ -1463,8 +1455,8 @@ void ScheduleNode::receive_forfeit(const ConflictForfeit& msg)
   negotiation_room->check_cache({});
 
   // TODO(MXG): This should be removed once we have a negotiation visualizer
-  rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
-    negotiation);
+  // rmf_traffic_ros2::schedule::print_negotiation_status(msg.conflict_version,
+  //   negotiation);
 
   if (negotiation.complete())
   {

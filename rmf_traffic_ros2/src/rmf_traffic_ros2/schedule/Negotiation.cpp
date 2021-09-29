@@ -250,14 +250,14 @@ public:
 
     void timeout()
     {
-      std::cout << "####################3 CheckPoint [Negotiation.cpp] 2" << std::endl;
+      // std::cout << "####################3 CheckPoint [Negotiation.cpp] 2" << std::endl;
       if (!responded)
         forfeit({});
     }
 
     ~Responder()
     {
-      std::cout << "~Responder()" << std::endl;
+      // std::cout << "~Responder()" << std::endl;
       timeout();
     }
 
@@ -921,7 +921,7 @@ public:
       }
     }
 
-    print_negotiation_status(msg.conflict_version, negotiation);
+    // print_negotiation_status(msg.conflict_version, negotiation);
   }
 
   void receive_conclusion(const Conclusion& msg)

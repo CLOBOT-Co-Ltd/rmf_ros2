@@ -321,7 +321,7 @@ void RobotContext::clober_respond(
   std::string enemy_end,
   std::vector<std::string> enemy_path)
 {
-    std::cout <<"RobotContext::clober_respond id : " << target_robot_id <<std::endl;
+    // std::cout <<"RobotContext::clober_respond id : " << target_robot_id <<std::endl;
 
   if (_negotiator)
     return _negotiator->clober_respond(table_viewer, responder, target_robot_id, target_start,

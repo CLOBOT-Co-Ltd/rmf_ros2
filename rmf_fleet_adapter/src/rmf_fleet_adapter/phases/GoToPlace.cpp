@@ -173,7 +173,7 @@ void GoToPlace::Active::clober_respond(
       if (auto phase = w.lock())
       {
         result.respond();
-        std::cout << "result.respond()" << std::endl;
+        // std::cout << "result.respond()" << std::endl;
         phase->_negotiate_services.erase(result.service);
       }
       else
@@ -360,7 +360,7 @@ void GoToPlace::Active::find_plan()
     {
       #ifdef CLOBER_RMF
       // std::cout <<"findpath reuslt~~~~~~~~~~"<<std::endl;
-      std::cout << result.success() << std::endl;
+      // std::cout << result.success() << std::endl;
       if( result.success()){
         // std::cout <<"result get cost : " << result->get_cost() <<std::endl;
       }

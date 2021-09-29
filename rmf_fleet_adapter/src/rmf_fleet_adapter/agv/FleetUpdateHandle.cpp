@@ -97,7 +97,7 @@ public:
     std::string enemy_end,
     std::vector<std::string> enemy_path)
     { 
-        std::cout <<"LiaisonNegotiator::clober_respond id : " <<std::endl;
+        // std::cout <<"LiaisonNegotiator::clober_respond id : " <<std::endl;
         const auto negotiator = w_negotiator.lock();
         if (!negotiator)
         {
@@ -105,7 +105,7 @@ public:
           // forfeit.
           //
           // TODO(MXG): Consider issuing a warning here
-          std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [FleetUpdateHandle.cpp] 2" << std::endl;
+          // std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [FleetUpdateHandle.cpp] 2" << std::endl;
           return responder->forfeit({});
         }
 

@@ -226,11 +226,11 @@ public:
     }
 
     #ifdef CLOBER_RMF
-    std::cout <<"follow new path : "<<_current_path_request.robot_name<<std::endl;
+    // std::cout <<"follow new path : "<<_current_path_request.robot_name<<std::endl;
 
-    for(int i=0; i<_current_path_request.path.size(); i++){
-      std::cout << _current_path_request.path[i].x <<",  "<< _current_path_request.path[i].y <<std::endl;
-    }
+    // for(int i=0; i<_current_path_request.path.size(); i++){
+    //   std::cout << _current_path_request.path[i].x <<",  "<< _current_path_request.path[i].y <<std::endl;
+    // }
     #endif
     
     _path_requested_time = std::chrono::steady_clock::now();

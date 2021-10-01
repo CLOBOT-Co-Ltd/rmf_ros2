@@ -131,26 +131,17 @@ void GoToPlace::Active::clober_respond(
   else
   {
     if(_context->name() == target_robot_id) {
-
-      // std::cout << "MIP context name: " << _context->name() << std::endl;
-      // std::cout << "MIP start number: " << _context->location()[0].waypoint() << std::endl;
-      // std::cout << "MIP goal number: " << _goal.waypoint() << std::endl;
       negotiate = services::Negotiate::clober_path(
         _context->planner(), _context->location(), _goal, table_viewer,
         responder, std::move(approval_cb), evaluator,
         target_robot_id, target_start, target_end, target_path,
         enemy_robot_id, enemy_start, enemy_startidx, enemy_end, enemy_path, true);
     } else {
-      // negotiate = services::Negotiate::path(
-      //   _context->planner(), _context->location(), _goal, table_viewer,
-      //   responder, std::move(approval_cb), evaluator);
-
-      // std::cout << "BFS context name: " << _context->name() << std::endl;
-      // std::cout << "BFS start number: " << _context->location()[0].waypoint() << std::endl;
-      // std::cout << "BFS goal number: " << _goal.waypoint() << std::endl;
-
       rmf_traffic::Time initial_time = _context->location()[0].time();
-      std::size_t index = _context->location()[0].waypoint();
+      
+      std::string enemy_start_index = enemy_path[0];
+      enemy_start_index.erase(enemy_start_index.begin());
+      std::size_t index = std::stoi(enemy_start_index);
 
       rmf_traffic::agv::Plan::Start _start(initial_time, index ,400.0);
       std::vector<rmf_traffic::agv::Plan::Start> _starts;

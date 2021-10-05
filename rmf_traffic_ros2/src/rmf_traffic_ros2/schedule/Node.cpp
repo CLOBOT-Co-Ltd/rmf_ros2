@@ -107,98 +107,7 @@ std::vector<ScheduleNode::ConflictSet> get_conflicts(
 
 #else
 //==============================================================================
-std::vector<ScheduleNode::ConflictSet> ScheduleNode::get_conflicts(
-  const rmf_traffic::schedule::Viewer::View& view_changes,
-  const rmf_traffic::schedule::ItineraryViewer& viewer)
-{
-  std::vector<ScheduleNode::ConflictSet> conflicts;
-  const auto& participants = viewer.participant_ids();
-
-  for (const auto participant : participants)
-  {
-    if(participant > 1) continue;
-
-    const auto itinerary = *viewer.get_itinerary(participant);
-    const auto description = viewer.get_participant(participant);
-    if (!description)
-      continue;
-    
-    std::cout << "[Node.cpp] " << participant << "\'s itinerary size : "<< itinerary.size() << std::endl;
-
-    for (auto vc = view_changes.begin(); vc != view_changes.end(); ++vc)
-    {
-      if (vc->participant == participant)
-      {
-        // There's no need to check a participant against itself
-        // const auto a_it = _fleet.find(vc->description.name());
-        // _fleet.erase(a_it);
-        continue;
-      }
-      std::cout << "=========================================================" << std::endl;
-      std::cout << "[Node.cpp] Viewer\'s ID: " << participant << " , name: " << description->name() << std::endl;
-      std::cout << "[Node.cpp] View Changes\'s ID: " << vc->participant << " , name: " << vc->description.name() << std::endl << std::endl;
-
-      if(!_fleet.count(description->name()) || !_fleet.count(vc->description.name()))
-        continue;
-
-      const auto a_it = _fleet.find(description->name());
-      _fleet.erase(a_it);
-      Eigen::Vector2d pos_a = a_it->second;
-
-      const auto b_it = _fleet.find(vc->description.name());
-      _fleet.erase(b_it);
-      Eigen::Vector2d pos_b = b_it->second;
-
-      // std::cout << "[Node.cpp] get_conflicts pos_a fleet state: " << pos_a.x() << " , " << pos_a.y() << std::endl;
-      // std::cout << "[Node.cpp] get_conflicts pos_b fleet state: " << pos_b.x() << " , " << pos_b.y() << std::endl;
-
-      for (const auto& route : itinerary)
-      {
-        // std::cout << "[Node.cpp] Viewer\'s Route map: " << route->map() << std::endl; // L1
-        // std::cout << "[Node.cpp] Viewer\'s Route Trajectory Size: " << route->trajectory().size() << std::endl;
-        // std::cout << "---------------------------------------------------------" << std::endl;
-        // rmf_traffic::Time start_time = *route->trajectory().start_time();
-        // std::cout << "[Node.cpp] " << description->name() << "\'s Waypoint[x,y,a,t] : " << std::endl;
-        // for(int i = 0; i < route->trajectory().size(); i++) {
-        //   const rmf_traffic::Trajectory::Waypoint& way = route->trajectory()[i];
-        //   const auto rel_time = way.time() - start_time;
-
-        //   std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << ", " << rmf_traffic::time::to_seconds(rel_time) << "]" << std::endl;
-        // }
-        // std::cout << "---------------------------------------------------------" << std::endl;
-        // rmf_traffic::Time start_time_2 = *vc->route.trajectory().start_time();
-        // std::cout << "[Node.cpp] " << vc->description.name() << "\'s Waypoint[x,y,a,t] : " << std::endl;
-        // for(int i = 0; i < vc->route.trajectory().size(); i++) {
-        //   const rmf_traffic::Trajectory::Waypoint& way = vc->route.trajectory()[i];
-        //   const auto rel_time = way.time() - start_time_2;
-
-        //   std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " << way.position().y() << ", " << way.position().z() << ", " << rmf_traffic::time::to_seconds(rel_time) << "]" << std::endl;
-        // }
-        // std::cout << std::endl;
-        
-        assert(route);
-        if (route->map() != vc->route.map())
-          continue;
-
-        if (rmf_traffic::CloberDetectConflict::between(
-            vc->description.name(),
-            vc->route.trajectory(),
-            pos_b,
-            description->name(),
-            route->trajectory(),
-            pos_a))
-        {
-          conflicts.push_back({participant, vc->participant});
-        }
-      }
-    }
-  }
-
-  return conflicts;
-}
-
-//==============================================================================
-std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> ScheduleNode::get_conflicts2(
+std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> ScheduleNode::get_conflicts(
   const rmf_traffic::schedule::Viewer::View& view_changes,
   const rmf_traffic::schedule::ItineraryViewer& viewer) 
 {
@@ -239,7 +148,7 @@ std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> 
         ScheduleNode::ConflictNotice conflict_notice;
 
         conflict_notice = 
-        rmf_traffic::CloberDetectConflict::between2(
+        rmf_traffic::CloberDetectConflict::between(
           vc->description.name(),
           vc->route.trajectory(),
           pos_b,
@@ -653,7 +562,7 @@ void ScheduleNode::setup_conflict_topics_and_thread()
           conflict_notice_pub->publish(msg);
         }
         #else
-        const auto conflicts = get_conflicts2(view_changes, mirror);
+        const auto conflicts = get_conflicts(view_changes, mirror);
 
         std::unordered_map<Version, const Negotiation*> new_negotiations;
         std::unordered_map<Version, ScheduleNode::ConflictNotice> new_conflicts;

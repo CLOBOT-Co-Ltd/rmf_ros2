@@ -308,11 +308,7 @@ public:
   using Negotiation = rmf_traffic::schedule::Negotiation;
 
   #ifdef CLOBER_RMF
-  std::vector<ScheduleNode::ConflictSet> get_conflicts(
-    const rmf_traffic::schedule::Viewer::View& view_changes,
-    const rmf_traffic::schedule::ItineraryViewer& viewer);
-
-  std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> get_conflicts2(
+  std::vector<std::pair<ScheduleNode::ConflictSet, ScheduleNode::ConflictNotice>> get_conflicts(
     const rmf_traffic::schedule::Viewer::View& view_changes,
     const rmf_traffic::schedule::ItineraryViewer& viewer);
   #endif

@@ -141,9 +141,9 @@ void GoToPlace::Active::clober_respond(
       
       std::string enemy_start_index = enemy_path[0];
       enemy_start_index.erase(enemy_start_index.begin());
-      std::size_t index = std::stoi(enemy_start_index) - 1;
+      double index = std::stod(enemy_start_index) + 400.0;
 
-      rmf_traffic::agv::Plan::Start _start(initial_time, index ,400.0);
+      rmf_traffic::agv::Plan::Start _start(initial_time, 0, index);
       std::vector<rmf_traffic::agv::Plan::Start> _starts;
       _starts.push_back(_start);
 
